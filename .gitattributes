@@ -1,0 +1,8 @@
+*.ttf            binary
+*.ttc            binary
+*.txt            text
+*.png            binary
+*.svg            binary
+*.gitattributes  text
+*.py             text
+*.md             text
