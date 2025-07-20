@@ -59,7 +59,7 @@ class BaseWidget(pygame.sprite.Sprite):
         self.widget_name = widget_name
         self.parent = None
 
-    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: tp.List[pygame.event.Event]) -> None:
         pass
 
     def get_widget_name(self) -> str:
@@ -74,10 +74,10 @@ class BaseWidget(pygame.sprite.Sprite):
 
 class AnimatedSurface(BaseWidget):
     def __init__(self,
-                 x: t.Union[int, float],
-                 y: t.Union[int, float],
+                 x: tp.Union[int, float],
+                 y: tp.Union[int, float],
                  surface: pygame.Surface,
-                 callback: t.Optional[t.Callable[[], None]],
+                 callback: tp.Optional[tp.Callable[[], None]],
                  widen_amount: int = 60,
                  widget_name: str = "!animated_surf"):
         """Animates a static surface image to dilate on mouse-hover and shrink on mouse-leave. When clicked, the surface
@@ -121,7 +121,7 @@ class AnimatedSurface(BaseWidget):
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
         self.mask = pygame.mask.from_surface(self.image)
 
-    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: tp.List[pygame.event.Event]) -> None:
         # region Tick Size
         collide = pygame.sprite.collide_mask(self, mouse_obj)
         if collide is None:
@@ -180,7 +180,7 @@ class AnimatedSurface(BaseWidget):
                                        self.height / 2 - self.current_height / 2))
         self.mask = pygame.mask.from_surface(self.image)
 
-    def calc_physics(self, delta_time: float, direction: t.Literal["increase", "decrease"]) -> float:
+    def calc_physics(self, delta_time: float, direction: tp.Literal["increase", "decrease"]) -> float:
         self.difference *= math.pow(self.reducing_fraction, delta_time)
         if self.resize_state == "dilating" and direction == "decrease" or \
                 self.resize_state == "shrinking" and direction == "increase":
@@ -199,7 +199,7 @@ class AnimatedSurface(BaseWidget):
             self.difference = self.max_width - self.min_width
         return new_width
 
-    def change_size(self, direction: t.Literal["increase", "decrease"]) -> None:
+    def change_size(self, direction: tp.Literal["increase", "decrease"]) -> None:
         if (self.resize_state, direction) in (("small", "decrease"), ("large", "increase")):
             self.delta_timer.reset_timer()
             return None
@@ -211,7 +211,7 @@ class AnimatedSurface(BaseWidget):
         self.delta_timer.reset_timer()
 
     @staticmethod
-    def calc_size(y_pos: int, og_width: int, og_height: int, widen_amount: int = 60) -> t.Tuple[float, float]:
+    def calc_size(y_pos: int, og_width: int, og_height: int, widen_amount: int = 60) -> tp.Tuple[float, float]:
         """Returns the top and bottom y coordinates of the button when it is at its max size."""
         aspect_ratio = og_height / og_width
         max_width = og_width + widen_amount
@@ -224,16 +224,16 @@ class AnimatedSurface(BaseWidget):
 
 class Button(AnimatedSurface):
     def __init__(self,
-                 x: t.Union[int, float],
-                 y: t.Union[int, float],
+                 x: tp.Union[int, float],
+                 y: tp.Union[int, float],
                  width: int,
                  height: int,
                  border: int,
-                 fg: t.Tuple[int, int, int],
-                 bg: t.Tuple[int, int, int],
+                 fg: tp.Tuple[int, int, int],
+                 bg: tp.Tuple[int, int, int],
                  font: pygame.font.Font,
                  text: str,
-                 callback: t.Optional[t.Callable[[], None]],
+                 callback: tp.Optional[tp.Callable[[], None]],
                  widen_amount: int = 60,
                  widget_name: str = "!button"):
         """Similar to AnimatedSurface, except it accepts a font object and a string in order to create the surface
@@ -246,13 +246,13 @@ class Button(AnimatedSurface):
 
 class Label(BaseWidget):
     def __init__(self,
-                 x: t.Union[int, float],
-                 y: t.Union[int, float],
-                 text: t.Union[str, t.List[str]],
-                 fg: t.Tuple[int, int, int],
+                 x: tp.Union[int, float],
+                 y: tp.Union[int, float],
+                 text: tp.Union[str, tp.List[str]],
+                 fg: tp.Tuple[int, int, int],
                  width: int,
                  font: pygame.font.Font,
-                 align: t.Literal["left", "center", "right"] = "center",
+                 align: tp.Literal["left", "center", "right"] = "center",
                  no_wrap: bool = False,
                  widget_name: str = "!label"):
         """Accepts text to be displayed, width in pixels, and a font object. The text will be word-wrapped to guarantee
@@ -276,26 +276,26 @@ class Label(BaseWidget):
                 x = width - size[0]
             self.image.blit(surface, (x, index * self.line_height))
 
-    def update_position(self, x: t.Union[int, float], y: t.Union[int, float]) -> None:
+    def update_position(self, x: tp.Union[int, float], y: tp.Union[int, float]) -> None:
         self.x = x
         self.y = y
         self.rect = pygame.Rect(self.x, self.y, self.rect.width, self.rect.height)
 
-    def get_size(self) -> t.Tuple[int, int]:
+    def get_size(self) -> tp.Tuple[int, int]:
         return self.rect.size
 
 
 class SplitLabel(BaseWidget):
-    def __init__(self, x: t.Union[int, float], y: t.Union[int, float], lines: t.Tuple[str, str],
-                 wrap_widths: t.Tuple[int, int], font: pygame.font.Font, fg: t.Tuple[int, int, int],
-                 bg: t.Tuple[int, int, int], radius: int, padding: int, widget_name: str = "!split_label"):
+    def __init__(self, x: tp.Union[int, float], y: tp.Union[int, float], lines: tp.Tuple[str, str],
+                 wrap_widths: tp.Tuple[int, int], font: pygame.font.Font, fg: tp.Tuple[int, int, int],
+                 bg: tp.Tuple[int, int, int], radius: int, padding: int, widget_name: str = "!split_label"):
         """Appears as a rounded rect with a line of word-wrapped text on either side horizontally. Great for displaying
         tables with two columns."""
         super().__init__(widget_name)
         self.x = x
         self.y = y
         self.width = 2 * radius + sum(wrap_widths) + padding
-        self.wrapped_lines: t.List[Label] = []
+        self.wrapped_lines: tp.List[Label] = []
         self.wrapped_lines.append(Label(radius, radius, lines[0], fg, wrap_widths[0], font, align="left"))
         label = Label(0, radius, lines[1], fg, wrap_widths[1], font, align="right")
         label.update_position(self.width - radius - label.get_size()[0], radius)
@@ -310,8 +310,8 @@ class SplitLabel(BaseWidget):
 
 
 class ParagraphRect(BaseWidget):
-    def __init__(self, x: t.Union[int, float], y: t.Union[int, float], width: int, radius: int, padding: int,
-                 fg: t.Tuple[int, int, int], bg: t.Tuple[int, int, int], heading: str, body: str,
+    def __init__(self, x: tp.Union[int, float], y: tp.Union[int, float], width: int, radius: int, padding: int,
+                 fg: tp.Tuple[int, int, int], bg: tp.Tuple[int, int, int], heading: str, body: str,
                  heading_font: pygame.font.Font, body_font: pygame.font.Font, widget_name: str = "!p_rect"):
         """Displays a heading and a word-wrapped paragraph in a rounded rect."""
         super().__init__(widget_name)
@@ -330,19 +330,19 @@ class ParagraphRect(BaseWidget):
         self.image.blit(body_label.image, body_label.rect)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
-    def get_size(self) -> t.Tuple[int, int]:
+    def get_size(self) -> tp.Tuple[int, int]:
         return self.width, self.height
 
 
 class Checkbox(BaseWidget):
     def __init__(self,
-                 x: t.Union[int, float],
-                 y: t.Union[int, float],
+                 x: tp.Union[int, float],
+                 y: tp.Union[int, float],
                  label_text: str,
                  button_length: int,
                  border_radius: int,
-                 text_color: t.Tuple[int, int, int],
-                 bg: t.Tuple[int, int, int],
+                 text_color: tp.Tuple[int, int, int],
+                 bg: tp.Tuple[int, int, int],
                  width: int,
                  font: pygame.font.Font,
                  padding: int,
@@ -368,7 +368,7 @@ class Checkbox(BaseWidget):
         self.rect = pygame.Rect(self.x, self.y, *self.image.get_size())
         self.__button = Box(padding, padding, self.button_length, self.button_radius, border)
 
-    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: tp.List[pygame.event.Event]) -> None:
         abs_pos = mouse_obj.get_pos()
         rel_mouse = mouse_obj.copy()
         rel_mouse.set_pos(abs_pos[0] - self.x, abs_pos[1] - self.y)
@@ -378,14 +378,14 @@ class Checkbox(BaseWidget):
     def get_data(self) -> bool:
         return self.__button.get_data()
 
-    def get_size(self) -> t.Tuple[int, int]:
+    def get_size(self) -> tp.Tuple[int, int]:
         return self.image.get_size()
 
 
 class Box(pygame.sprite.Sprite):
     def __init__(self,
-                 x: t.Union[int, float],
-                 y: t.Union[int, float],
+                 x: tp.Union[int, float],
+                 y: tp.Union[int, float],
                  length: int,
                  radius: int,
                  border: int):
@@ -453,14 +453,14 @@ class RadioGroup:
         self.children = []
 
     def create_radio_button(self,
-                            x: t.Union[int, float],
-                            y: t.Union[int, float],
+                            x: tp.Union[int, float],
+                            y: tp.Union[int, float],
                             label_text: str,
                             button_length: int,
                             border_radius: int,
                             selected_radius: int,
-                            text_color: t.Tuple[int, int, int],
-                            bg: t.Tuple[int, int, int],
+                            text_color: tp.Tuple[int, int, int],
+                            bg: tp.Tuple[int, int, int],
                             width: int,
                             font: pygame.font.Font,
                             padding: int,
@@ -491,16 +491,16 @@ class RadioGroup:
 class RadioButton(Checkbox):
     def __init__(self,
                  radio_id: int,
-                 callback: t.Callable[[int], None],
+                 callback: tp.Callable[[int], None],
                  selected: bool,
-                 x: t.Union[int, float],
-                 y: t.Union[int, float],
+                 x: tp.Union[int, float],
+                 y: tp.Union[int, float],
                  label_text: str,
                  button_length: int,
                  border_radius: int,
                  selected_radius: int,
-                 text_color: t.Tuple[int, int, int],
-                 bg: t.Tuple[int, int, int],
+                 text_color: tp.Tuple[int, int, int],
+                 bg: tp.Tuple[int, int, int],
                  width: int,
                  font: pygame.font.Font,
                  padding: int,
@@ -516,7 +516,7 @@ class RadioButton(Checkbox):
         self.__button = Circle(padding, padding, self.button_radius, border, selected_radius, radio_id, callback,
                                selected)
 
-    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: tp.List[pygame.event.Event]) -> None:
         abs_pos = mouse_obj.get_pos()
         rel_mouse = mouse_obj.copy()
         rel_mouse.set_pos(abs_pos[0] - self.x, abs_pos[1] - self.y)
@@ -526,19 +526,19 @@ class RadioButton(Checkbox):
     def unselect(self) -> None:
         self.__button.unselect()
 
-    def get_size(self) -> t.Tuple[int, int]:
+    def get_size(self) -> tp.Tuple[int, int]:
         return self.image.get_size()
 
 
 class Circle(pygame.sprite.Sprite):
     def __init__(self,
-                 x: t.Union[int, float],
-                 y: t.Union[int, float],
+                 x: tp.Union[int, float],
+                 y: tp.Union[int, float],
                  radius: int,
                  border: int,
                  selected_radius: int,
                  radio_id: int,
-                 on_click: t.Callable[[int], None],
+                 on_click: tp.Callable[[int], None],
                  selected: bool = False):
         super().__init__()
         self.id = radio_id
@@ -589,13 +589,13 @@ class Circle(pygame.sprite.Sprite):
 
 class Entry(BaseWidget):
     def __init__(self,
-                 x: t.Union[int, float],
-                 y: t.Union[int, float],
+                 x: tp.Union[int, float],
+                 y: tp.Union[int, float],
                  width: int,
                  height: int,
                  padding: int,
                  font: pygame.font.Font,
-                 fg: t.Tuple[int, int, int],
+                 fg: tp.Tuple[int, int, int],
                  widget_name: str = "!entry"):
         """A simple text-box widget. Behaves virtually identical to the text-box widget of win32gui. Its copy-pasting
         functionality relies on the 'Pyperclip' module, so make sure to have it installed. Note that the environment
@@ -671,10 +671,11 @@ class Entry(BaseWidget):
                         dest=(self.padding, self.padding),
                         area=self.text_canvas.get_view_rect())
 
-    def update_real_pos(self, real_pos: t.Tuple[t.Union[int, float], t.Union[int, float]]) -> None:
+    def update_real_pos(self, real_pos: tp.Tuple[tp.Union[int, float], tp.Union[int, float]]) -> None:
         self.real_x, self.real_y = real_pos
 
-    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: t.List[pygame.event.Event]) -> t.Tuple[bool, bool, bool]:
+    def update(self, mouse_obj: Mouse.Cursor,
+               keyboard_events: tp.List[pygame.event.Event]) -> tp.Tuple[bool, bool, bool]:
         collide = pygame.sprite.collide_rect(self, mouse_obj)
         if collide:
             if mouse_obj.get_button_state(1):
@@ -899,7 +900,7 @@ class Entry(BaseWidget):
         self.text_canvas.add_text(text)
         self.text_canvas.select_all()
 
-    def get_pos(self) -> t.Tuple[int, int]:
+    def get_pos(self) -> tp.Tuple[int, int]:
         return self.x, self.y
 
     def get_entry_content(self) -> str:
@@ -907,7 +908,7 @@ class Entry(BaseWidget):
 
 
 class EntryText:
-    def __init__(self, width: int, height: int, font: pygame.font.Font, text_color: t.Tuple[int, int, int]):
+    def __init__(self, width: int, height: int, font: pygame.font.Font, text_color: tp.Tuple[int, int, int]):
         self.font = font
         self.text_color = text_color
         self.scroll_padding = 5
@@ -981,7 +982,7 @@ class EntryText:
         # (e.g. the shift key is still held down, or the left mouse button is still held down)
         return self.selecting
 
-    def selection_rect_collide(self, position: t.Tuple[int, int]) -> bool:
+    def selection_rect_collide(self, position: tp.Tuple[int, int]) -> bool:
         if (self.select_rect is not None) and (self.select_start != -1 and self.select_end != -1):
             rect = pygame.Rect(self.select_rect.x + self.x, self.select_rect.y, *self.select_rect.size)
             return rect.collidepoint(*position)
@@ -1225,7 +1226,7 @@ class EntryText:
             end_pos = self.calc_text_size(self.text[:self.select_end])[0]
             self.select_rect = pygame.Rect(start_pos, 0, end_pos - start_pos + self.caret_width, self.view_height)
 
-    def change_caret_pos(self, direction: t.Literal["l", "r"]) -> None:
+    def change_caret_pos(self, direction: tp.Literal["l", "r"]) -> None:
         if not self.focus:
             return None
         if direction == "l":
@@ -1358,7 +1359,7 @@ class EntryText:
         else:
             return text
 
-    def calc_text_size(self, text: str) -> t.Tuple[float, int]:
+    def calc_text_size(self, text: str) -> tp.Tuple[float, int]:
         text_size = self.font.size(text)
         wh_ratio = text_size[0] / text_size[1]
         new_size = (self.view_height * wh_ratio, self.view_height)
@@ -1385,7 +1386,7 @@ class EntryText:
     def mouse_collision(self, mouse_obj: Mouse.Cursor) -> bool:
         return pygame.Rect(0, 0, self.view_width, self.view_height).collidepoint(*mouse_obj.get_pos())
 
-    def move_view_by_caret(self, direction: t.Literal["l", "r"]) -> None:
+    def move_view_by_caret(self, direction: tp.Literal["l", "r"]) -> None:
         if direction == "l":
             width = self.calc_text_size(self.text[:self.caret_index])[0] + self.caret_width
             self.x = -(width - self.view_width + self.scroll_padding)
@@ -1396,7 +1397,7 @@ class EntryText:
             else:
                 self.x = -(width - self.caret_width - self.scroll_padding)
 
-    def move_view_by_pos(self, direction: t.Literal["l", "r"]) -> None:
+    def move_view_by_pos(self, direction: tp.Literal["l", "r"]) -> None:
         if not self.focus:
             return None
         if direction == "l":
@@ -1438,18 +1439,18 @@ class EntryText:
 
 class Slider(BaseWidget):
     def __init__(self,
-                 x: t.Union[int, float],
-                 y: t.Union[int, float],
+                 x: tp.Union[int, float],
+                 y: tp.Union[int, float],
                  text_height: int,
-                 text_color: t.Tuple[int, int, int],
+                 text_color: tp.Tuple[int, int, int],
                  line_length: int,
                  line_thickness: int,
-                 dormant_line_color: t.Tuple[int, int, int],
-                 active_line_color: t.Tuple[int, int, int],
+                 dormant_line_color: tp.Tuple[int, int, int],
+                 active_line_color: tp.Tuple[int, int, int],
                  thumb_width: int,
                  thumb_height: int,
-                 dormant_color: t.Tuple[int, int, int],
-                 active_color: t.Tuple[int, int, int],
+                 dormant_color: tp.Tuple[int, int, int],
+                 active_color: tp.Tuple[int, int, int],
                  font: pygame.font.Font,
                  min_value: int,
                  max_value: int,
@@ -1513,7 +1514,7 @@ class Slider(BaseWidget):
                          + self.max_text_width / 2 - text_surf.get_width() / 2,
                          self.height / 2 - text_surf.get_height() / 2))
 
-    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: tp.List[pygame.event.Event]) -> None:
         relative_mouse = mouse_obj.copy()
         relative_mouse.set_pos(mouse_obj.get_pos()[0] - self.x - self.thumb_width / 2,
                                mouse_obj.get_pos()[1] - self.y - self.slider_thumb.get_position()[1])
@@ -1523,7 +1524,7 @@ class Slider(BaseWidget):
     def render_text(self, text: str) -> pygame.Surface:
         return pygame.transform.scale(self.font.render(text, True, self.text_color), self.resize_text(text))
 
-    def resize_text(self, text: str) -> t.Tuple[float, int]:
+    def resize_text(self, text: str) -> tp.Tuple[float, int]:
         text_size = self.font.size(text)
         wh_ratio = text_size[0] / text_size[1]
         new_size = (self.text_height * wh_ratio, self.text_height)
@@ -1542,7 +1543,7 @@ class Slider(BaseWidget):
                   thumb_height: int,
                   font: pygame.font.Font,
                   max_value: int,
-                  text_padding: int = 10) -> t.Tuple[float, int]:
+                  text_padding: int = 10) -> tp.Tuple[float, int]:
         text_size = font.size(str(max_value))
         max_text_width = text_height * (text_size[0] / text_size[1])
         width = thumb_width + line_length + text_padding + max_text_width
@@ -1552,11 +1553,11 @@ class Slider(BaseWidget):
 
 class SliderButton(pygame.sprite.Sprite):
     def __init__(self,
-                 y: t.Union[int, float],
+                 y: tp.Union[int, float],
                  width: int,
                  height: int,
-                 dormant_color: t.Tuple[int, int, int],
-                 active_color: t.Tuple[int, int, int],
+                 dormant_color: tp.Tuple[int, int, int],
+                 active_color: tp.Tuple[int, int, int],
                  slider_length: int,
                  min_value: int,
                  max_value: int):
@@ -1636,7 +1637,7 @@ class SliderButton(pygame.sprite.Sprite):
         self.x = mid_x - self.width / 2
         self.current_value = value
 
-    def get_position(self) -> t.Tuple[float, float]:
+    def get_position(self) -> tp.Tuple[float, float]:
         return self.x, self.y
 
     def get_surface(self) -> pygame.Surface:
@@ -1647,7 +1648,7 @@ class SliderButton(pygame.sprite.Sprite):
 
 
 class ScrollBar(BaseWidget):
-    def __init__(self, width: int = 20, orientation: t.Literal["vertical", "horizontal"] = "vertical",
+    def __init__(self, width: int = 20, orientation: tp.Literal["vertical", "horizontal"] = "vertical",
                  shorten: bool = False, widget_name: str = "!scrollbar"):
         """A simple, functional scrollbar. It can be interacted with by dragging the thumb, clicking or holding down the
         up and down buttons, or using the scroll-wheel. The width of the scrollbar can be customized by passing a value
@@ -1669,7 +1670,7 @@ class ScrollBar(BaseWidget):
         self.content_height = 0
         self.scroll_factor = None
         self.button_scroll_amount = 10
-        self.thumb: t.Optional[ScrollThumb] = None
+        self.thumb: tp.Optional[ScrollThumb] = None
         self.up_button = None
         self.down_button = None
         self.image = None
@@ -1735,7 +1736,7 @@ class ScrollBar(BaseWidget):
             # 'scrollbar_distance' is zero, that means no scrolling is needed.
             self.scroll_factor = None
 
-    def resize_scrollbar(self, new_size: t.Tuple[int, int]) -> None:
+    def resize_scrollbar(self, new_size: tp.Tuple[int, int]) -> None:
         if self.orientation == "vertical":
             self.x = new_size[0] - self.width
             self.height = new_size[1] - (self.width if self.shorten else 0)
@@ -1763,7 +1764,7 @@ class ScrollBar(BaseWidget):
         self.image.blit(self.up_button.image, self.up_button.rect)
         self.image.blit(self.down_button.image, self.down_button.rect)
 
-    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: tp.List[pygame.event.Event]) -> None:
         relative_mouse = mouse_obj.copy()
         relative_mouse.set_pos(mouse_obj.get_pos()[0] - self.x, mouse_obj.get_pos()[1] - self.y)
         self.update_scrollbar_length()
@@ -1775,10 +1776,12 @@ class ScrollBar(BaseWidget):
             relative_mouse.set_pos(mouse_obj.get_pos()[0] - self.x - self.height, mouse_obj.get_pos()[1] - self.y)
         did_scroll = self.thumb.update(relative_mouse)
         if self.scroll_factor is not None:
-            if did_scroll:
+            if did_scroll == 1:
                 # If the scrollbar was dragged, and there is space to scroll...
                 self.parent.set_scroll_offset(-(self.scroll_factor * (self.thumb.y if self.orientation == "vertical"
                                                                       else self.thumb.x)), self.orientation)
+            elif did_scroll == 2:
+                self.scroll_by_content(0, increase_scroll=False)
             else:
                 if mouse_obj.get_scroll(self.orientation) != 0:
                     self.scroll_by_content(mouse_obj.get_scroll(self.orientation)
@@ -1792,17 +1795,17 @@ class ScrollBar(BaseWidget):
     def mouse_colliding(self, mouse_obj: Mouse.Cursor) -> bool:
         return self.rect.collidepoint(*mouse_obj.get_pos())
 
-    def scroll_by_content(self, value: int) -> None:
+    def scroll_by_content(self, value: int, increase_scroll: bool = True) -> None:
         if self.scroll_factor is None:
             return None
-        new_content_y = self.parent.add_scroll_offset(value, self.orientation)
+        new_content_y = self.parent.add_scroll_offset(value, self.orientation, increase_scroll)
         new_thumb_y = -new_content_y / self.scroll_factor
         self.thumb.force_set_pos(new_thumb_y)
 
 
 class ScrollThumb(pygame.sprite.Sprite):
     def __init__(self, scrollbar_width: int, scrollbar_height: int, thumb_length: float,
-                 orientation: t.Literal["vertical", "horizontal"]):
+                 orientation: tp.Literal["vertical", "horizontal"]):
         super().__init__()
         self.x = 0
         self.y = 0
@@ -1865,10 +1868,14 @@ class ScrollThumb(pygame.sprite.Sprite):
             self.x = new_y
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
-    def update(self, mouse_obj: Mouse.Cursor) -> bool:
-        did_scroll = False
+    def update(self, mouse_obj: Mouse.Cursor) -> tp.Literal[0, 1, 2]:
+        """Return values:
+        0: The thumb has not been dragged.
+        1: The thumb was dragged.
+        2: Content height of frame changed."""
+        did_scroll: tp.Literal[0, 1, 2] = 0
         if self.mouse_down and not mouse_obj.has_left():
-            did_scroll = True
+            did_scroll = 1
             if self.orientation == "vertical":
                 self.y = mouse_obj.get_pos()[1] - self.mouse_offset
             else:
@@ -1896,7 +1903,7 @@ class ScrollThumb(pygame.sprite.Sprite):
             self.current_color = self.dragged_color
         if self.length_updated:
             self.length_updated = False
-            did_scroll = True
+            did_scroll = 2
         self.render_surface()
         return did_scroll
 
@@ -1912,10 +1919,10 @@ class ScrollThumb(pygame.sprite.Sprite):
 
 class ScrollButton(pygame.sprite.Sprite):
     def __init__(self,
-                 x: t.Union[int, float],
-                 y: t.Union[int, float],
+                 x: tp.Union[int, float],
+                 y: tp.Union[int, float],
                  button_length: int,
-                 direction: t.Literal["up", "down", "left", "right"]):
+                 direction: tp.Literal["up", "down", "left", "right"]):
         super().__init__()
         self.x = x
         self.y = y
@@ -1982,14 +1989,14 @@ class ScrollButton(pygame.sprite.Sprite):
 
 class Spinner(BaseWidget):
     def __init__(self,
-                 x: t.Union[int, float],
-                 y: t.Union[int, float],
+                 x: tp.Union[int, float],
+                 y: tp.Union[int, float],
                  size: int,
                  thickness: int,
                  lit_length: int,
-                 speed: t.Union[int, float],
-                 unlit_color: t.Tuple[int, int, int],
-                 lit_color: t.Tuple[int, int, int],
+                 speed: tp.Union[int, float],
+                 unlit_color: tp.Tuple[int, int, int],
+                 lit_color: tp.Tuple[int, int, int],
                  widget_name: str = "!spinner"):
         """A simple, highly customizable spinner widget. Unfortunately, the arc that makes up the spinner will have
         'holes' in it at higher thicknesses due to limitations in the 'pygame.draw.arc' function."""
@@ -2028,7 +2035,7 @@ class Spinner(BaseWidget):
                         math.radians(end_angle),
                         self.thickness)
 
-    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: tp.List[pygame.event.Event]) -> None:
         d_t = self.delta_timer.get_time()
         self.delta_timer.reset_timer()
         self.angle += self.speed * d_t
@@ -2037,8 +2044,8 @@ class Spinner(BaseWidget):
 
 
 class Frame(BaseWidget):
-    def __init__(self, x: t.Union[int, float], y: t.Union[int, float], width: int, height: int, padding_bottom: int,
-                 bg: t.Union[t.Tuple[int, int, int], t.Tuple[int, int, int, int]] = (0, 0, 0, 0), z_index: int = 1,
+    def __init__(self, x: tp.Union[int, float], y: tp.Union[int, float], width: int, height: int, padding_bottom: int,
+                 bg: tp.Union[tp.Tuple[int, int, int], tp.Tuple[int, int, int, int]] = (0, 0, 0, 0), z_index: int = 1,
                  widget_name: str = "!frame"):
         """Container class for all widgets. Every widget should be added to a frame after initialization. User input can
         then be passed to all widgets in the frame by calling the frame's 'update' method and passing a 'Mouse.Cursor'
@@ -2051,14 +2058,14 @@ class Frame(BaseWidget):
         self.width = width
         self.real_height = height
         self.height = height
-        self.window_data: t.Dict[str, t.Optional[t.Union[t.List[int],
-                                                         t.Tuple[t.Union[int, float], t.Union[int, float]]]]] = {}
+        self.window_data: tp.Dict[str, tp.Optional[tp.Union[tp.List[int],
+                                                   tp.Tuple[tp.Union[int, float], tp.Union[int, float]]]]] = {}
         self.padding_bottom = padding_bottom
         self.bg = bg
         self.scroll_constant = 20
         self.z_index = z_index
         self.new_size = False
-        self.resize_exclude: t.Dict[str, t.Literal["x", "y", "both"]] = {}
+        self.resize_exclude: tp.Dict[str, tp.Literal["x", "y", "both"]] = {}
         self.text_input = False
         self.cursor_display = "arrow"  # Literal["arrow", "i_beam", "text_drag"]
         self.cursor_icons = Mouse.CursorIcons()
@@ -2069,14 +2076,14 @@ class Frame(BaseWidget):
         # `pygame.font.Font.render` might contain, and the surfaces of most child widgets will contain text.
         self.image = pygame.Surface((width, height), flags=pygame.SRCALPHA)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-        self.child_widgets: t.Dict[str, BaseWidget] = {}
-        self.real_positions: t.Dict[str, t.Tuple[t.Union[int, float], t.Union[int, float]]] = {}
+        self.child_widgets: tp.Dict[str, BaseWidget] = {}
+        self.real_positions: tp.Dict[str, tp.Tuple[tp.Union[int, float], tp.Union[int, float]]] = {}
         self.scrollbar_names = []
         # Stores the order in which widgets will be rendered. The last item will be rendered last, and therefore
         # will be on the topmost layer.
         self.render_z_order = []
 
-    def add_widget(self, widget_obj: t.Union[BaseWidget, RadioGroup]) -> None:
+    def add_widget(self, widget_obj: tp.Union[BaseWidget, RadioGroup]) -> None:
         if isinstance(widget_obj, RadioGroup):
             for w in widget_obj.get_children():
                 self.add_widget(w)
@@ -2110,6 +2117,9 @@ class Frame(BaseWidget):
         else:
             raise WidgetIDError(widget_id)
 
+    def update_scroll_padding(self, new_padding: int) -> None:
+        self.padding_bottom = new_padding
+
     def get_content_width(self) -> int:
         return max((widget.x + widget.image.get_width())
                    for widget in self.child_widgets.values() if not isinstance(widget, ScrollBar)) + self.padding_bottom
@@ -2122,16 +2132,17 @@ class Frame(BaseWidget):
             w_bottoms.append(widget.y + widget.image.get_height())
         return (max(w_bottoms) if w_bottoms else 0) + self.padding_bottom
 
-    def add_scroll_offset(self, amount: int, direction: t.Literal["vertical", "horizontal"]) -> float:
+    def add_scroll_offset(self, amount: int, direction: tp.Literal["vertical", "horizontal"],
+                          increase_scroll: bool) -> float:
         """Adds a value to the current scroll offset and returns the result."""
         if direction == "vertical":
-            self.y_scroll_offset += amount + math.copysign(self.scroll_constant, amount)
+            self.y_scroll_offset += amount + (math.copysign(self.scroll_constant, amount) * increase_scroll)
             if self.y_scroll_offset > 0:
                 self.y_scroll_offset = 0
             elif self.y_scroll_offset < -(self.get_content_height() - self.height):
                 self.y_scroll_offset = -(self.get_content_height() - self.height)
         else:
-            self.x_scroll_offset += amount + math.copysign(self.scroll_constant, amount)
+            self.x_scroll_offset += amount + (math.copysign(self.scroll_constant, amount) * increase_scroll)
             if self.x_scroll_offset > 0:
                 self.x_scroll_offset = 0
             elif self.x_scroll_offset < -(self.get_content_width() - self.width):
@@ -2142,7 +2153,7 @@ class Frame(BaseWidget):
         else:
             return self.x_scroll_offset
 
-    def set_scroll_offset(self, offset: int, direction: t.Literal["vertical", "horizontal"]) -> None:
+    def set_scroll_offset(self, offset: int, direction: tp.Literal["vertical", "horizontal"]) -> None:
         if direction == "vertical":
             self.y_scroll_offset = offset
         else:
@@ -2157,8 +2168,8 @@ class Frame(BaseWidget):
         else:
             return original_rect
 
-    def update_window_data(self, fixed_res: t.Tuple[int, int], current_res: t.List[int],
-                           resized_res: t.Tuple[t.Union[int, float], t.Union[int, float]]) -> None:
+    def update_window_data(self, fixed_res: tp.Tuple[int, int], current_res: tp.List[int],
+                           resized_res: tp.Tuple[tp.Union[int, float], tp.Union[int, float]]) -> None:
         """Only needed for frames that contain entry widgets. Every time the window is resized, this method should be
         called before the 'update' method. This method can be ignored if the window is not resizable or actually moves
         the position of on-screen objects on resizing."""
@@ -2175,36 +2186,38 @@ class Frame(BaseWidget):
         widget.update_real_pos((self.x + widget.get_pos()[0] + self.x_scroll_offset,
                                 self.y + widget.get_pos()[1] + self.y_scroll_offset))
 
-    def update_size(self, new_size: t.Tuple[int, int]) -> None:
+    def update_size(self, new_size: tp.Tuple[int, int]) -> None:
         self.new_size = True
         self.width, self.height = new_size
         self.image = pygame.Surface((self.width, self.height), flags=pygame.SRCALPHA)
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
     def manual_move_widget(self, widget_name: str,
-                           new_pos: t.Tuple[t.Optional[t.Union[int, float]], t.Optional[t.Union[int, float]]]) -> None:
+                           new_pos: tp.Tuple[tp.Optional[tp.Union[int, float]],
+                                             tp.Optional[tp.Union[int, float]]]) -> None:
         if widget_name not in self.child_widgets:
             raise WidgetIDError(widget_name)
         else:
-            resize_dir: t.Literal["x", "y", "both"]
+            resize_dir: tp.Literal["x", "y", "both"]
             if new_pos[0] is None and new_pos[1] is not None:
                 resize_dir = "y"
             elif new_pos[0] is not None and new_pos[1] is None:
                 resize_dir = "x"
-            else:
+            else:  # Both dimensions are manually resized *or* both should remain the same without being auto-resized.
                 resize_dir = "both"
             self.resize_exclude[widget_name] = resize_dir
             self.update_widget_pos(self.child_widgets[widget_name], new_pos)
 
     def update_widget_pos(self, widget: BaseWidget,
-                          new_pos: t.Tuple[t.Optional[t.Union[int, float]], t.Optional[t.Union[int, float]]],
-                          anchor: t.Literal["nw", "center"] = "nw") -> None:
+                          new_pos: tp.Tuple[tp.Optional[tp.Union[int, float]], tp.Optional[tp.Union[int, float]]],
+                          anchor: tp.Literal["nw", "center"] = "nw") -> None:
         new_pos = list(new_pos)
         if new_pos[0] is None:
             new_pos[0] = widget.x
         if new_pos[1] is None:
             new_pos[1] = widget.y
         if isinstance(widget, OptionMenu):
+            # noinspection PyTypeChecker
             widget.update_position(tuple(new_pos), anchor)
             return None
         if anchor == "nw":  # Anchor "nw" is used by manual resizing
@@ -2216,7 +2229,7 @@ class Frame(BaseWidget):
         if isinstance(widget, Entry):
             self.update_entry_widget(widget)
 
-    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: tp.List[pygame.event.Event]) -> None:
         if self.z_index == mouse_obj.get_z_index() and self.rect.collidepoint(*mouse_obj.get_pos()):
             pointer_events = True
             abs_pos = mouse_obj.get_pos()
@@ -2255,6 +2268,8 @@ class Frame(BaseWidget):
             if self.new_size:
                 if isinstance(widget, ScrollBar):
                     widget.resize_scrollbar((self.width, self.height))
+                elif hasattr(widget, "update_size"):  # 🦆 type for resizable child widgets.
+                    widget.update_size((self.width, self.height))
                 else:
                     new_pos = [self.width * (self.real_positions[w_name][0] / self.real_width),
                                self.height * (self.real_positions[w_name][1] / self.real_height)]
@@ -2265,7 +2280,9 @@ class Frame(BaseWidget):
                             new_pos[1] = None
                         elif self.resize_exclude[w_name] == "both":
                             new_pos = [None, None]
-                    self.update_widget_pos(widget, tuple(new_pos), anchor="center")
+                    if new_pos != [None, None]:
+                        # noinspection PyTypeChecker
+                        self.update_widget_pos(widget, tuple(new_pos), anchor="center")
             if isinstance(widget, Entry):
                 value = widget.update(scrolled_rel_mouse, keyboard_events)
                 return_values.append(value)
@@ -2333,9 +2350,9 @@ class Frame(BaseWidget):
 
 
 class OptionMenu(BaseWidget):
-    def __init__(self, pos: t.Tuple[t.Union[int, float], t.Union[int, float]],
-                 size: t.Tuple[t.Union[int, float], t.Union[int, float]], padding: int, font: pygame.font.Font,
-                 options: t.Tuple[str, ...], menu_side: t.Literal["top", "bottom"],
+    def __init__(self, pos: tp.Tuple[tp.Union[int, float], tp.Union[int, float]],
+                 size: tp.Tuple[tp.Union[int, float], tp.Union[int, float]], padding: int, font: pygame.font.Font,
+                 options: tp.Tuple[str, ...], menu_side: tp.Literal["top", "bottom"],
                  menu_height: int, widget_name: str = "!option_menu"):
         """OptionMenu widget. Takes a tuple of strings as the options to be displayed. The 'get_info' method can be
         called to get the currently selected option and whether the selected option has changed since the last call."""
@@ -2366,9 +2383,9 @@ class OptionMenu(BaseWidget):
         self.opt_changed = False
         self.menu_side = menu_side
         self.dropdown_height = menu_height
-        self.dropdown: t.Optional[Frame] = None
-        self.image: t.Optional[pygame.Surface] = None
-        self.rect: t.Optional[pygame.Rect] = None
+        self.dropdown: tp.Optional[Frame] = None
+        self.image: tp.Optional[pygame.Surface] = None
+        self.rect: tp.Optional[pygame.Rect] = None
         self.hit_box = pygame.Rect(0, self.dropdown_height if self.menu_side == "top" else 0, self.width, self.height)
         self.arrow_rect = pygame.Rect(self.width - self.height, self.hit_box.y, self.height, self.height)
         self.arrow_size = (self.height - 15, self.height - 25)
@@ -2399,7 +2416,7 @@ class OptionMenu(BaseWidget):
             self.dropdown.add_widget(ScrollBar(width=self.scrollbar_size, orientation="horizontal", shorten=True,
                                                widget_name="!h_scroll"))
 
-    def get_real_pos(self, anchor: t.Literal["nw", "center"]) -> t.Tuple[t.Union[int, float], t.Union[int, float]]:
+    def get_real_pos(self, anchor: tp.Literal["nw", "center"]) -> tp.Tuple[tp.Union[int, float], tp.Union[int, float]]:
         """Returns the position of the widget not including the dropdown."""
         nw = (self.x + self.hit_box.x, self.y + self.hit_box.y)
         if anchor == "nw":
@@ -2407,8 +2424,8 @@ class OptionMenu(BaseWidget):
         else:
             return nw[0] + self.width / 2, nw[1] + self.height / 2
 
-    def update_position(self, new_pos: t.Tuple[t.Union[int, float], t.Union[int, float]],
-                        anchor: t.Literal["nw", "center"]) -> None:
+    def update_position(self, new_pos: tp.Tuple[tp.Union[int, float], tp.Union[int, float]],
+                        anchor: tp.Literal["nw", "center"]) -> None:
         if anchor == "nw":
             self.x = new_pos[0]
             self.y = new_pos[1] - (self.dropdown_height if self.menu_side == "top" else 0)
@@ -2430,7 +2447,7 @@ class OptionMenu(BaseWidget):
         if self.dropdown_shown:
             self.image.blit(self.dropdown.image, self.dropdown.rect)
 
-    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: tp.List[pygame.event.Event]) -> None:
         abs_x, abs_y = mouse_obj.get_pos()
         rel_mouse = mouse_obj.copy()
         rel_mouse.set_pos(abs_x - self.x, abs_y - self.y)
@@ -2481,7 +2498,7 @@ class OptionMenu(BaseWidget):
         self.opt_changed = True
         self.dropdown_shown = False
 
-    def get_info(self) -> t.Tuple[int, bool]:
+    def get_info(self) -> tp.Tuple[int, bool]:
         """Intended to be called from outside the class, will return the selected option and whether it has changed
         since the last call."""
         val = False
@@ -2492,9 +2509,9 @@ class OptionMenu(BaseWidget):
 
 
 class Option(BaseWidget):
-    def __init__(self, pos: t.Tuple[t.Union[int, float], t.Union[int, float]],
-                 size: t.Tuple[int, int], padding: int, text_surf: pygame.Surface,
-                 opt_id: int, callback: t.Callable[[int], None], widget_name: str = "!option"):
+    def __init__(self, pos: tp.Tuple[tp.Union[int, float], tp.Union[int, float]],
+                 size: tp.Tuple[int, int], padding: int, text_surf: pygame.Surface,
+                 opt_id: int, callback: tp.Callable[[int], None], widget_name: str = "!option"):
         super().__init__(widget_name)
         self.x, self.y = pos
         self.width, self.height = size
@@ -2517,7 +2534,7 @@ class Option(BaseWidget):
         self.image.fill(self.current_color)
         self.image.blit(self.text_surf, (self.padding, self.padding))
 
-    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: tp.List[pygame.event.Event]) -> None:
         collide = self.rect.collidepoint(*mouse_obj.get_pos())
         if not collide:
             if not mouse_obj.get_button_state(1):
@@ -2537,7 +2554,7 @@ class Option(BaseWidget):
 
 
 class NodeLoader(threading.Thread):
-    def __init__(self, abs_path: str, loader_func: t.Callable[[str, threading.Event], None]):
+    def __init__(self, abs_path: str, loader_func: tp.Callable[[str, threading.Event], None]):
         super().__init__()
         self.abs_path = abs_path
         self.loader_func = loader_func
@@ -2548,10 +2565,10 @@ class NodeLoader(threading.Thread):
 
 
 class DirTree(Frame):
-    def __init__(self, x: t.Union[int, float], y: t.Union[int, float], width: int, height: int, font: pygame.font.Font,
-                 entry_height: int, scroll_padding: int, entry_text_pad: int, entry_btn_pad: int,
-                 path_binding: t.Callable[[str], None], widget_name: str = "!dir_tree"):
-        """TreeView widget for browsing directories."""
+    def __init__(self, x: tp.Union[int, float], y: tp.Union[int, float], width: int, height: int,
+                 font: pygame.font.Font, entry_height: int, scroll_padding: int, entry_text_pad: int,
+                 entry_btn_pad: int, path_binding: tp.Callable[[str], None], widget_name: str = "!dir_tree"):
+        """TreeView widget for browsing directories. This widget is a mess and not ready to use."""
         super().__init__(x, y, width, height, scroll_padding, COLORS["WHITE"], widget_name=widget_name)
         self.font = font
         self.entry_height = entry_height
@@ -2565,9 +2582,9 @@ class DirTree(Frame):
         self.fs_root = self.win_root if current_os == "Windows" else path.normpath("/")
         self.indent_x = 20
         # Saves widget objects to be added in the next update.
-        self.schded_widgets: t.List[t.Union["DirNode", "TextNode"]] = []
-        self.schded_del_widgets: t.List[str] = []
-        self.nodes: t.List[t.Optional[t.Union[DirNode, TextNode]]] = [
+        self.schded_widgets: tp.List[tp.Union["DirNode", "TextNode"]] = []
+        self.schded_del_widgets: tp.List[str] = []
+        self.nodes: tp.List[tp.Optional[tp.Union[DirNode, TextNode]]] = [
             self.add_widget(DirNode(0, 0, 0, self.fs_root,
                                     self.font, self.entry_height, self.entry_text_pad, self.entry_btn_pad,
                                     self.start_path_loader, self.register_selection, auto_select=True,
@@ -2576,15 +2593,15 @@ class DirTree(Frame):
         self.selected_path = self.fs_root
         # {"abs_path": do_continue}, if a path is the key to a False value, the directory structure of that path should
         # not be added as nodes.
-        # t.Tuple[str, t.Optional[t.List[str]]] = (abs_path, ["dir1", "dir2", "dir3"]), threads dumps the loaded
+        # tp.Tuple[str, tp.Optional[tp.List[str]]] = (abs_path, ["dir1", "dir2", "dir3"]), threads dumps the loaded
         # directory structure here, where the MainThread will create the nodes for it at the next update. If the second
         # tuple item is None, that means an error occurred while loading.
         self.pending_nodes = queue.Queue()
         # Holds thread objects, the exit protocol won't clear the cache until all threads in this list are stopped.
-        self.thread_objs: t.Dict[str, t.Union[threading.Thread, NodeLoader]] = {}
+        self.thread_objs: tp.Dict[str, tp.Union[threading.Thread, NodeLoader]] = {}
         # For holding threads whose starting have been delayed by the fact that the cache is currently being cleared.
-        self.spawn_wait_list: t.List[NodeLoader] = []
-        self.clean_thread: t.Optional[threading.Thread] = None
+        self.spawn_wait_list: tp.List[NodeLoader] = []
+        self.clean_thread: tp.Optional[threading.Thread] = None
         self.safety_lock = threading.Lock()
         self.add_widget(ScrollBar(width=scroll_padding, orientation="vertical", shorten=True, widget_name="!scroll1"))
         self.add_widget(ScrollBar(width=scroll_padding, orientation="horizontal", shorten=True, widget_name="!scroll2"))
@@ -2605,9 +2622,9 @@ class DirTree(Frame):
     def clean_threads(self) -> None:
         # Filter out dead threads.
         self.thread_objs = {path_hash: td for path_hash, td in self.thread_objs.items()
-                            if td.is_alive() and (type(td) == threading.Thread or not td.canceled.is_set())}
+                            if td.is_alive() and (isinstance(td, threading.Thread) or not td.canceled.is_set())}
 
-    def start_path_loader(self, mode: t.Literal["expand", "collapse"], abs_path: str) -> bool:
+    def start_path_loader(self, mode: tp.Literal["expand", "collapse"], abs_path: str) -> bool:
         """Returns True on success, False otherwise."""
         # Do not add widgets using 'self.add_widget' in this method, as this method is called while child widgets are
         # being updated.
@@ -2674,7 +2691,7 @@ class DirTree(Frame):
         path_hash = str(hash(abs_path))
         cache_path = os.path.join(self.cache_path, path_hash)
         got_data = False
-        dir_data: t.List[str] = []
+        dir_data: tp.List[str] = []
         if abs_path == self.win_root:
             available_drives = get_drive_letters()
             if available_drives is not None:
@@ -2688,7 +2705,7 @@ class DirTree(Frame):
         if not cancel.is_set():  # Only add directory data to the queue if the load had not been canceled.
             self.pending_nodes.put((abs_path, dir_data if got_data else None))
 
-    def load_from_cache(self, cache_path: str) -> t.Tuple[bool, t.List[str]]:
+    def load_from_cache(self, cache_path: str) -> tp.Tuple[bool, tp.List[str]]:
         directories = []
         try:
             with open(cache_path, "r", encoding="utf-8", newline="") as file:
@@ -2703,7 +2720,7 @@ class DirTree(Frame):
         else:
             return True, directories
 
-    def scan_dir_gen_cache(self, abs_path: str, cache_path: str) -> t.Tuple[bool, t.List[str]]:
+    def scan_dir_gen_cache(self, abs_path: str, cache_path: str) -> tp.Tuple[bool, tp.List[str]]:
         directories = []
         try:
             with open(cache_path, "w", encoding="utf-8", newline="") as file:
@@ -2728,7 +2745,7 @@ class DirTree(Frame):
         else:
             return True, directories
 
-    def scan_dir_no_errs(self, abs_path: str) -> t.List[str]:
+    def scan_dir_no_errs(self, abs_path: str) -> tp.List[str]:
         """Reads directory and returns an empty list both when it is actually empty and when there is an error."""
         if abs_path == self.win_root:
             drives = get_drive_letters()
@@ -2751,7 +2768,7 @@ class DirTree(Frame):
         """Creates new nodes to represent all newly loaded directory structures since the last update."""
         try:
             while True:
-                abs_path, dirs = self.pending_nodes.get(block=False)  # str, t.Optional[t.List[str]]
+                abs_path, dirs = self.pending_nodes.get(block=False)  # str, tp.Optional[tp.List[str]]
                 parent_index = self.locate_node_obj(abs_path)
                 if parent_index == -1:
                     # Either something went wrong, or the node was un-expanded while it was loading
@@ -2785,12 +2802,12 @@ class DirTree(Frame):
         except queue.Empty:  # The queue has been exhausted
             return None
 
-    def schd_add_w(self, node_obj: t.Union["DirNode", "TextNode"]) -> t.Union["DirNode", "TextNode"]:
+    def schd_add_w(self, node_obj: tp.Union["DirNode", "TextNode"]) -> tp.Union["DirNode", "TextNode"]:
         """Schedules a node to be added the next time the 'update' method is called."""
         self.schded_widgets.append(node_obj)
         return node_obj
 
-    def add_widget(self, widget_obj: t.Union[BaseWidget, RadioGroup]) -> t.Optional[t.Union["DirNode", "TextNode"]]:
+    def add_widget(self, widget_obj: tp.Union[BaseWidget, RadioGroup]) -> tp.Optional[tp.Union["DirNode", "TextNode"]]:
         """After adding widget, will return the widget object if it's a DirNode or TextNode."""
         super().add_widget(widget_obj)
         if isinstance(widget_obj, DirNode) or isinstance(widget_obj, TextNode):
@@ -2816,14 +2833,14 @@ class DirTree(Frame):
         self.nodes[:] = [n for n in self.nodes if not n.del_node]
         self.safety_lock.release()
 
-    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: tp.List[pygame.event.Event]) -> None:
         self.run_schded_tasks()
         self.add_pending_nodes()
         super().update(mouse_obj, keyboard_events)
 
     def reload_dirs(self) -> None:
-        dir_stack: t.List[t.List[str]] = [self.scan_dir_no_errs(self.fs_root)]
-        stack_idx: t.List[int] = [0]
+        dir_stack: tp.List[tp.List[str]] = [self.scan_dir_no_errs(self.fs_root)]
+        stack_idx: tp.List[int] = [0]
         flat_idx = 1
         if not dir_stack[0]:  # Failed to read root directory
             return None
@@ -2925,8 +2942,8 @@ class TextNode(BaseWidget):
         self.text_height = height - 2 * self.padding
         self.width = 0
         self.height = height
-        self.image: t.Optional[pygame.Surface] = None
-        self.rect: t.Optional[pygame.Rect] = None
+        self.image: tp.Optional[pygame.Surface] = None
+        self.rect: tp.Optional[pygame.Rect] = None
         self.del_node = False
         self.change_text(text)
 
@@ -2953,8 +2970,8 @@ class TextNode(BaseWidget):
 
 class DirNode(BaseWidget):
     def __init__(self, x: int, y: int, nest_level: int, abs_path: str, font: pygame.font.Font, height: int,
-                 text_pad: int, btn_pad: int, toggle_expand: t.Callable[[t.Literal["expand", "collapse"], str], bool],
-                 click_func: t.Callable[[str], None], auto_select: bool = False,
+                 text_pad: int, btn_pad: int, toggle_expand: tp.Callable[[tp.Literal["expand", "collapse"], str], bool],
+                 click_func: tp.Callable[[str], None], auto_select: bool = False,
                  widget_name: str = "!dir_node"):
         super().__init__(widget_name)
         self.x, self.y = x, y
@@ -2997,7 +3014,7 @@ class DirNode(BaseWidget):
         pygame.draw.rect(self.image, self.active_color if self.selected else self.normal_color, self.node_rect)
         self.image.blit(self.text_surf, (self.arrow_obj.rect.width + self.btn_pad + self.text_pad, self.text_pad))
 
-    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update(self, mouse_obj: Mouse.Cursor, keyboard_events: tp.List[pygame.event.Event]) -> None:
         rel_mouse = mouse_obj.copy()
         abs_x, abs_y = mouse_obj.get_pos()
         rel_mouse.set_pos(abs_x - self.x, abs_y - self.y)
@@ -3049,14 +3066,14 @@ class DirNode(BaseWidget):
 
 
 class NodeButton(pygame.sprite.Sprite):
-    def __init__(self, x: t.Union[int, float], y: t.Union[int, float], length: int):
+    def __init__(self, x: tp.Union[int, float], y: tp.Union[int, float], length: int):
         super().__init__()
         self.x, self.y = x, y
         self.length = length
         self.normal_color = COLORS["GREY5"]
         self.active_color = (85, 211, 249)
         self.current_color = self.normal_color
-        self.direction: t.Literal["right", "down"] = "right"
+        self.direction: tp.Literal["right", "down"] = "right"
         self.arrow_size_r = (length - 10, length - 2)
         self.arrow_size_d = (length - 2, length - 10)
         self.lock = True
@@ -3073,10 +3090,9 @@ class NodeButton(pygame.sprite.Sprite):
         draw_arrow(self.image, self.current_color, pos,
                    self.arrow_size_r if self.direction == "right" else self.arrow_size_d, self.direction, 3)
 
-    def update(self, mouse_obj: Mouse.Cursor) -> t.Tuple[bool, t.Literal["right", "down"]]:
+    def update(self, mouse_obj: Mouse.Cursor) -> tp.Tuple[bool, tp.Literal["right", "down"]]:
         collide = self.rect.collidepoint(*mouse_obj.get_pos())
         clicked = False
-        self.direction: t.Literal["right", "down"]
         if not collide:
             if not mouse_obj.get_button_state(1):
                 self.mouse_down = False
@@ -3096,18 +3112,19 @@ class NodeButton(pygame.sprite.Sprite):
                 self.lock = False
             self.current_color = self.active_color
         self.render_surface()
+        # noinspection PyTypeChecker
         return clicked, self.direction
 
 
 class Window(pygame.sprite.Sprite):
     def __init__(self,
-                 x: t.Union[int, float],
-                 start_y: t.Union[int, float],
-                 final_y: t.Union[int, float],
-                 bg: t.Tuple[int, int, int],
+                 x: tp.Union[int, float],
+                 start_y: tp.Union[int, float],
+                 final_y: tp.Union[int, float],
+                 bg: tp.Tuple[int, int, int],
                  overlay_max_alpha: int,
-                 active_color: t.Tuple[int, int, int],
-                 dormant_color: t.Tuple[int, int, int],
+                 active_color: tp.Tuple[int, int, int],
+                 dormant_color: tp.Tuple[int, int, int],
                  border_radius: int,
                  button_length: int,
                  button_padding: int,
@@ -3128,7 +3145,7 @@ class Window(pygame.sprite.Sprite):
         self.width = border_radius * 2 + self.content_frame.width
         self.height = border_radius * 2 + button_length + button_padding + self.content_frame.height
         self.distance = self.start_y - self.final_y
-        self.direction: t.Literal["u", "d", "i", "r"] = "u"
+        self.direction: tp.Literal["u", "d", "i", "r"] = "u"
         self.bg = bg
         self.destination_surf = destination_surf
         self.z_index = z_index
@@ -3198,12 +3215,12 @@ class Window(pygame.sprite.Sprite):
 
 class WindowButton(pygame.sprite.Sprite):
     def __init__(self,
-                 x: t.Union[int, float],
-                 y: t.Union[int, float],
+                 x: tp.Union[int, float],
+                 y: tp.Union[int, float],
                  length: int,
                  thickness: int,
-                 active_color: t.Tuple[int, int, int],
-                 dormant_color: t.Tuple[int, int, int]):
+                 active_color: tp.Tuple[int, int, int],
+                 dormant_color: tp.Tuple[int, int, int]):
         super().__init__()
         self.x = x
         self.y = y
@@ -3255,7 +3272,7 @@ class BaseOverlay:
         self.image.fill(COLORS["BLACK"])
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
-    def resize(self, new_size: t.Tuple[int, int]) -> None:
+    def resize(self, new_size: tp.Tuple[int, int]) -> None:
         old_alpha = self.image.get_alpha()
         self.image = pygame.Surface(new_size)
         self.image.set_alpha(old_alpha)
@@ -3263,7 +3280,7 @@ class BaseOverlay:
 
 
 class SceneTransition(BaseOverlay):
-    def __init__(self, width: int, height: int, speed: int, callback: t.Callable[[], None]):
+    def __init__(self, width: int, height: int, speed: int, callback: tp.Callable[[], None]):
         """A simple transition effect. The screen will steadily darken until fully black, then the same animation is
         played in reverse until fully transparent. This transition is useful for making scene-changes less abrupt."""
         super().__init__(width, height)
@@ -3294,7 +3311,7 @@ class SceneTransition(BaseOverlay):
 
 
 class WindowOverlay(BaseOverlay):
-    def __init__(self, width: int, height: int, max_alpha: int, total_distance: t.Union[int, float]):
+    def __init__(self, width: int, height: int, max_alpha: int, total_distance: tp.Union[int, float]):
         """Darkens the screen by an amount proportionate to the distance the window has moved from the edge of the
         screen as it plays its entry animation. The same animation is played in reverse when the window plays its exit
         animation. This effect is useful for directing the user's attention to the active window."""
@@ -3303,7 +3320,7 @@ class WindowOverlay(BaseOverlay):
         self.max_alpha = max_alpha
         self.total_distance = total_distance
 
-    def update(self, moved_distance: t.Union[int, float]) -> None:
+    def update(self, moved_distance: tp.Union[int, float]) -> None:
         self.alpha = self.max_alpha * (moved_distance / self.total_distance)
         self.image.set_alpha(round(self.alpha))
 

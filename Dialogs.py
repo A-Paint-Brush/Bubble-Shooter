@@ -1,8 +1,8 @@
 """Stores classes for managing screen layouts or pop-up dialogs."""
+from Env import cjk_fonts
 from collections import namedtuple
 from tkinter import filedialog
-import itertools as itools
-import operator as op
+import pygame.surfarray
 import tkinter as tk
 from Util import *
 import itertools
@@ -12,22 +12,22 @@ import getpass
 import pygame
 import copy
 import math
-if t.TYPE_CHECKING:
-    import Counters
+if tp.TYPE_CHECKING:
+    import Counters  # noqa
     import Mouse
 
 
-def v_pack_buttons(container_size: t.Tuple[int, int], widget_frame: Widgets.Frame, widget_labels: t.List[str],
-                   widget_sizes: t.List[t.Tuple[int, int]], widget_callbacks: t.List[t.Callable[[], None]],
-                   font: pygame.font.Font, padding: int, start_y: t.Optional[int] = None,
-                   start_id: int = 1) -> t.Tuple[int, int]:
+def v_pack_buttons(container_size: tp.Tuple[int, int], widget_frame: Widgets.Frame, widget_labels: tp.List[str],
+                   widget_sizes: tp.List[tp.Tuple[int, int]], widget_callbacks: tp.List[tp.Callable[[], None]],
+                   font: pygame.font.Font, padding: int, start_y: tp.Optional[int] = None,
+                   start_id: int = 1) -> tp.Tuple[int, int]:
     """Vertically stack a group of buttons on the same column. Each button will be horizontally centered, and the
     amount of vertical padding between each button will be uniform. The column of buttons will also be vertically
     centered within the height of the container area, unless a value is passed to the 'start_y' parameter, in which case
     the top of the column will be positioned at the y value given. Returns a two-item tuple with the first item being
     the value the widget-ID counter should be updated to, and the second being the total height of the buttons."""
     wid = start_id
-    buttons: t.List[Widgets.Button] = []
+    buttons: tp.List[Widgets.Button] = []
     for size, label, callback in zip(widget_sizes, widget_labels, widget_callbacks):
         btn = Widgets.Button(0, 0, size[0], size[1], 1, COLORS["BLACK"], COLORS["ORANGE"], font, label, callback,
                              widget_name="!button{}".format(wid := wid + 1))
@@ -44,10 +44,10 @@ def v_pack_buttons(container_size: t.Tuple[int, int], widget_frame: Widgets.Fram
     return wid, sum_height
 
 
-def h_pack_buttons_se(container_size: t.Tuple[int, int], widget_frame: Widgets.Frame,
-                      widget_surfaces: t.List[pygame.Surface], widget_callbacks: t.List[t.Callable[[], None]],
-                      padding: int, widen_amount: int, start_y: t.Optional[int] = None,
-                      start_id: int = 1) -> t.Tuple[int, int]:
+def h_pack_buttons_se(container_size: tp.Tuple[int, int], widget_frame: Widgets.Frame,
+                      widget_surfaces: tp.List[pygame.Surface], widget_callbacks: tp.List[tp.Callable[[], None]],
+                      padding: int, widen_amount: int, start_y: tp.Optional[int] = None,
+                      start_id: int = 1) -> tp.Tuple[int, int]:
     """Create a row of buttons that is positioned in the bottom-right corner of the container. The bottom side of the
     row of buttons will be one padding away from the bottom border of the container, unless a y position is given by the
     caller. The amount of horizontal padding between each button will be uniform. Each button will be vertically
@@ -74,8 +74,8 @@ def h_pack_buttons_se(container_size: t.Tuple[int, int], widget_frame: Widgets.F
     return wid, max_height
 
 
-def file_dialog(title: str, mode: t.Literal["open_file", "save_file"], ext_labels: t.List[str],
-                ext_patterns: t.List[str]) -> t.Optional[str]:
+def file_dialog(title: str, mode: tp.Literal["open_file", "save_file"], ext_labels: tp.List[str],
+                ext_patterns: tp.List[str]) -> tp.Optional[str]:
     """Displays a tk file dialog and returns the path selected by the user or None."""
     root = tk.Tk()
     root.withdraw()
@@ -93,9 +93,9 @@ def file_dialog(title: str, mode: t.Literal["open_file", "save_file"], ext_label
 
 
 class BaseDialog:
-    def __init__(self, surface: pygame.Surface, resolution: t.Tuple[int, int], max_window_size: t.Tuple[int, int],
+    def __init__(self, surface: pygame.Surface, resolution: tp.Tuple[int, int], max_window_size: tp.Tuple[int, int],
                  border_radius: int, button_length: int, button_padding: int, button_thickness: int,
-                 animation_speed: t.Union[int, float], max_widget_width: int, z_index: int = 1):
+                 animation_speed: tp.Union[int, float], max_widget_width: int, z_index: int = 1):
         """Base class for all dialogs. If the height that the content of the dialog occupies is less than the value
         given in the 'max_window_size' parameter, the dialog's height will be shortened to fit the contents, or else a
         scrollbar is added to the content area."""
@@ -107,8 +107,8 @@ class BaseDialog:
         self.button_thickness = button_thickness
         self.animation_speed = animation_speed
         self.z_index = z_index
-        self.small_font = pygame.font.Font(find_abs_path("./Fonts/Arial/normal.ttf"), 25)
-        self.large_font = pygame.font.Font(find_abs_path("./Fonts/Arial/normal.ttf"), 35)
+        self.small_font = pygame.font.SysFont("arial", 25)
+        self.large_font = pygame.font.SysFont("arial", 35)
         self.height_difference = self.border_radius * 2 + button_length + button_padding
         self.frame_size = [max_window_size[0] - self.border_radius * 2,
                            max_window_size[1] - self.height_difference]
@@ -125,9 +125,9 @@ class BaseDialog:
         self.content_frame = Widgets.Frame(self.final_window_pos[0] + border_radius,
                                            self.final_window_pos[1] + border_radius + button_length + button_padding,
                                            self.frame_size[0], self.frame_size[1], 20, z_index=z_index)
-        self.window: t.Optional[Widgets.Window] = None  # The size cannot be determined until all widgets are added
+        self.window: tp.Optional[Widgets.Window] = None  # The size cannot be determined until all widgets are added
 
-    def h_shift_widgets(self, amount: t.Union[int, float]) -> None:
+    def h_shift_widgets(self, amount: tp.Union[int, float]) -> None:
         for widget in self.content_frame.child_widgets.values():
             if isinstance(widget, Widgets.ScrollBar):  # The scrollbar should not be moved.
                 continue
@@ -137,7 +137,7 @@ class BaseDialog:
             widget.rect.move_ip(amount, 0)
 
     def create_label(self, text: str, padding: int, font: pygame.font.Font,
-                     align: t.Literal["left", "center", "right"] = "center") -> None:
+                     align: tp.Literal["left", "center", "right"] = "center") -> None:
         label = Widgets.Label(self.content_width / 2 - self.max_widget_width / 2, self.accumulated_y, text,
                               COLORS["BLACK"], self.max_widget_width, font, align=align,
                               widget_name="!label{}".format(self.widget_id))
@@ -186,7 +186,7 @@ class BaseDialog:
                                      self.button_length, self.button_padding, self.button_thickness,
                                      self.animation_speed, self.content_frame, self.surface, self.z_index)
 
-    def update(self, mouse_obj: "Mouse.Cursor", keyboard_events: t.List[pygame.event.Event]) -> bool:
+    def update(self, mouse_obj: "Mouse.Cursor", keyboard_events: tp.List[pygame.event.Event]) -> bool:
         return self.window.update(mouse_obj, keyboard_events)
 
     def draw(self) -> None:
@@ -194,9 +194,9 @@ class BaseDialog:
 
 
 class Settings(BaseDialog):
-    def __init__(self, surface: pygame.Surface, resolution: t.Tuple[int, int], max_window_size: t.Tuple[int, int],
+    def __init__(self, surface: pygame.Surface, resolution: tp.Tuple[int, int], max_window_size: tp.Tuple[int, int],
                  border_radius: int, button_length: int, button_padding: int, button_thickness: int,
-                 animation_speed: t.Union[int, float], max_widget_width: int, current_volume: int, z_index: int = 1):
+                 animation_speed: tp.Union[int, float], max_widget_width: int, current_volume: int, z_index: int = 1):
         super().__init__(surface, resolution, max_window_size, border_radius, button_length, button_padding,
                          button_thickness, animation_speed, max_widget_width, z_index)
         vertical_padding = 20
@@ -211,10 +211,10 @@ class Settings(BaseDialog):
 
 
 class Pause(BaseDialog):
-    def __init__(self, surface: pygame.Surface, resolution: t.Tuple[int, int], max_window_size: t.Tuple[int, int],
+    def __init__(self, surface: pygame.Surface, resolution: tp.Tuple[int, int], max_window_size: tp.Tuple[int, int],
                  border_radius: int, button_length: int, button_padding: int, button_thickness: int,
-                 full_screen_icon: pygame.Surface, animation_speed: t.Union[int, float], max_widget_width: int,
-                 current_volume: int, callbacks: t.List[t.Callable[[], None]], z_index: int = 1):
+                 full_screen_icon: pygame.Surface, animation_speed: tp.Union[int, float], max_widget_width: int,
+                 current_volume: int, callbacks: tp.List[tp.Callable[[], None]], z_index: int = 1):
         super().__init__(surface, resolution, max_window_size, border_radius, button_length, button_padding,
                          button_thickness, animation_speed, max_widget_width, z_index)
         vertical_padding = 20
@@ -242,14 +242,14 @@ class Pause(BaseDialog):
 
 
 class SubmitScore(BaseDialog):
-    def __init__(self, surface: pygame.Surface, resolution: t.Tuple[int, int], max_window_size: t.Tuple[int, int],
+    def __init__(self, surface: pygame.Surface, resolution: tp.Tuple[int, int], max_window_size: tp.Tuple[int, int],
                  border_radius: int, button_length: int, button_padding: int, button_thickness: int,
-                 animation_speed: t.Union[int, float], max_widget_width: int, callback: t.Callable[[str], None],
+                 animation_speed: tp.Union[int, float], max_widget_width: int, callback: tp.Callable[[str], None],
                  z_index: int = 1):
         super().__init__(surface, resolution, max_window_size, border_radius, button_length, button_padding,
                          button_thickness, animation_speed, max_widget_width, z_index)
-        self.label_font = pygame.font.Font(find_abs_path("./Fonts/Arial/normal.ttf"), 22)
-        self.entry_font = pygame.font.Font(find_abs_path("./Fonts/JhengHei/normal.ttc"), 20)
+        self.label_font = pygame.font.SysFont("arial", 22)
+        self.entry_font = pygame.font.SysFont(cjk_fonts, 20)
         self.submitted = False
         self.callback = callback
         vertical_padding = 10
@@ -277,8 +277,8 @@ class SubmitScore(BaseDialog):
         self.update_info_label("", no_delete=True)
         self.fit_to_content(force_scroll=True)  # Force the scrollbar to appear to accommodate for the info label.
 
-    def window_resize_event(self, current_res: t.List[int],
-                            resized_res: t.Tuple[t.Union[int, float], t.Union[int, float]]) -> None:
+    def window_resize_event(self, current_res: tp.List[int],
+                            resized_res: tp.Tuple[tp.Union[int, float], tp.Union[int, float]]) -> None:
         self.content_frame.update_window_data(self.resolution, current_res, resized_res)
 
     def update_info_label(self, message: str, no_delete: bool = False) -> None:
@@ -288,7 +288,7 @@ class SubmitScore(BaseDialog):
                               self.max_widget_width, self.label_font, widget_name="!info_label")
         self.content_frame.add_widget(label)
 
-    def check_valid(self, value: str) -> t.Optional[str]:
+    def check_valid(self, value: str) -> tp.Optional[str]:
         message = None
         if not value:  # Empty string.
             message = "Please enter at least one non-whitespace character."
@@ -310,7 +310,7 @@ class SubmitScore(BaseDialog):
 
 
 class LevelBoard(Widgets.Frame):
-    def __init__(self, res: t.Tuple[int, int], h_bubbles_num: int, nav_bar_h: int,
+    def __init__(self, res: tp.Tuple[int, int], h_bubbles_num: int, nav_bar_h: int,
                  scrollbar_width: int, z_index: int, widget_name: str = "!lvl_editor"):
         """Custom widget in charge of rendering the whole screen during levels and the level editor."""
         super().__init__(0, 0, *res, 100, bg=COLORS["CYAN"], z_index=z_index, widget_name=widget_name)
@@ -318,7 +318,7 @@ class LevelBoard(Widgets.Frame):
         colors = [(249, 152, 40), (249, 137, 206)]
         self.h_nav_bar = NavBar(res[1] - nav_bar_h, (res[0], nav_bar_h), scrollbar_width, colors, z_index)
         self.nav_bar_h = nav_bar_h
-        self.bubbles = BubbleCanvas((res[0], res[1] - nav_bar_h), scrollbar_width, colors, h_bubbles_num,
+        self.bubbles = BubbleCanvas((res[0], res[1] - nav_bar_h), scrollbar_width, colors, h_bubbles_num, nav_bar_h,
                                     self.h_nav_bar.get_selected_color, z_index)
         self.add_widget(self.bubbles)
         self.scrollbar_width = scrollbar_width
@@ -326,9 +326,12 @@ class LevelBoard(Widgets.Frame):
         self.h_bubbles_num = h_bubbles_num  # Max num of bubbles in a row
         self.editor = False
 
-    def update_size(self, new_size: t.Tuple[int, int]) -> None:
-        if self.editor:
-            self.bubbles.update_size((new_size[0], new_size[1] - self.nav_bar_h))
+    def update_size(self, new_size: tp.Tuple[int, int]) -> None:
+        super().update_size(new_size)  # IMPORTANT!
+
+    def update(self, mouse_obj: "Mouse.Cursor", keyboard_events: tp.List[pygame.event.Event]) -> None:
+        self.manual_move_widget(self.h_nav_bar.get_widget_name(), (0, self.rect.height - self.nav_bar_h))
+        super().update(mouse_obj, keyboard_events)
 
     def toggle_editor(self) -> None:
         self.editor = not self.editor
@@ -348,31 +351,61 @@ class LevelBoard(Widgets.Frame):
 
 class Bubble:
     def __init__(self, exists: bool = False, color: int = 0):
+        # main attrs
         self.exists = exists
         self.color = color
+        # preview attrs
+        self.preview = False
+        self.preview_color = 0
+
+
+def vert_gradient_column(size: tp.Tuple[int, int], top_color: tp.Tuple[int, int, int],
+                         bottom_color: tp.Tuple[int, int, int]) -> pygame.Surface:
+    """Not written by me, credits to 'pygame.examples.vgrade'. Slightly modified. Generates a vertical linear
+    gradient"""
+    top_color = np.array(top_color, copy=False)
+    bottom_color = np.array(bottom_color, copy=False)
+    diff = bottom_color - top_color
+    height = size[1]
+    # create array from 0.0 to 1.0 triplets
+    column = np.arange(height, dtype=np.float64) / height
+    column = np.repeat(column[:, np.newaxis], [3], 1)
+    # create a single column of gradient
+    column = top_color + (diff * column).astype(np.int32)
+    # make the column a 3d image column by adding X
+    column = column.astype(np.uint8)[np.newaxis, :, :]
+    surf = pygame.Surface(size)
+    # 3d array into 2d array, and blit to surface
+    pygame.surfarray.blit_array(surf, pygame.surfarray.map_array(surf, column))
+    return surf
 
 
 class BubbleCanvas(Widgets.Frame):
-    def __init__(self, size: t.Tuple[int, int], scrollbar_width: int, avail_colors: t.List[t.Tuple[int, int, int]],
-                 h_bubbles_num: int, nav_bar_func: t.Callable[[], int], z_index: int,
+    def __init__(self, size: tp.Tuple[int, int], scrollbar_width: int, avail_colors: tp.List[tp.Tuple[int, int, int]],
+                 h_bubbles_num: int, nav_bar_h: int, nav_bar_func: tp.Callable[[], int], z_index: int,
                  widget_name: str = "!bubble_canvas"):
         """Sub-frame in charge of rendering the bubbles in levels and the level editor."""
-        super().__init__(0, 0, size[0], size[1], scrollbar_width + 100, bg=COLORS["CYAN"], z_index=z_index,
-                         widget_name=widget_name)
+        super().__init__(0, 0, size[0], size[1], 1, bg=COLORS["CYAN"], z_index=z_index, widget_name=widget_name)
+        self.original_size = size
         self.editor = False
-        self.board: t.List[t.List[Bubble]] = []
+        self.board: tp.List[tp.List[Bubble]] = []
         self.radius, self.diameter = (0, 0)
         self.nav_bar_func = nav_bar_func
         self.scrollbar_width = scrollbar_width
         self.h_bubbles_num = h_bubbles_num
+        self.nav_bar_h = nav_bar_h
         self.new_row = [Bubble() for _ in range(self.h_bubbles_num)]
+        self.preview_alpha = SinWave.sin_between_two_pts(200, 10, freq=4)
+        self.grad_color = np.random.randint(0, 255, (2, 3))
         self.colors = avail_colors
-        self.color_surfs = []
+        self.color_surfs: tp.List[pygame.Surface] = []
+        self.cir_mid_man: tp.Optional[pygame.Surface] = None
         # 0 % 2 = 0, 1 % 2 = 1, 2 % 2 = 0, 3 % 2 = 1, ...
         self.len_f = lambda idx: self.h_bubbles_num - idx % 2  # Calcs the result of 'len(self.board[x])', necessary?
         self.h_pos_f = lambda row, col: (row % 2) * self.radius + col * self.diameter
         self.bubble_rect = pygame.Rect(0, 0, size[0] - self.scrollbar_width, size[1])
-        self.bubble_surf = pygame.Surface(size)
+        self.bubble_surf = pygame.Surface((size[0] - self.scrollbar_width, size[1]))
+        self.grad_surf = pygame.Surface(self.bubble_surf.get_size())
         self.bubble_surf.set_colorkey(COLORS["TRANSPARENT"])
         self.scrollbar = Widgets.ScrollBar(width=scrollbar_width)
         self.add_widget(self.scrollbar)
@@ -380,92 +413,145 @@ class BubbleCanvas(Widgets.Frame):
     def toggle_editor(self) -> None:
         self.editor = not self.editor
 
-    def update_size(self, new_res: t.Tuple[int, int]) -> None:
-        super().update_size(new_res)
-        # FIXME: The 'Frame' widget does not automatically call the 'update_size' method of child frames. This should be
-        #  fixed.
+    def update_size(self, frame_size: tp.Tuple[int, int]) -> None:
+        frame_size = (frame_size[0], frame_size[1] - self.nav_bar_h)  # Converts window size to bubble frame size.
+        # scale 'self.original_size' to the bounding box of 'new_res'
+        hw_ratio = self.original_size[1] / self.original_size[0]
+        max_size = (frame_size[1] / hw_ratio, frame_size[0] * hw_ratio)
+        if max_size[0] <= frame_size[0]:
+            new_size = (max_size[0], frame_size[1])
+            self.x, self.rect.x = (frame_size[0] / 2 - new_size[0] / 2,) * 2
+            self.y, self.rect.y = (0,) * 2
+        else:
+            new_size = (frame_size[0], max_size[1])
+            self.x, self.rect.x = (0,) * 2
+            self.y, self.rect.y = (frame_size[1] / 2 - new_size[1] / 2,) * 2
+        super().update_size(new_size)
+        self.bubble_surf = pygame.Surface((new_size[0] - self.scrollbar_width, new_size[1]))
+        self.grad_surf = vert_gradient_column(self.bubble_surf.get_size(), *self.grad_color)
+        self.bubble_surf.set_colorkey(COLORS["TRANSPARENT"])
+        self.bubble_rect = pygame.Rect(0, 0, *self.bubble_surf.get_size())
         width = self.width - self.scrollbar_width
         self.diameter = width / self.h_bubbles_num
         self.radius = self.diameter / 2
+        self.update_scroll_padding(int(5 * self.diameter))
+        self.cir_mid_man = pygame.Surface((self.diameter,) * 2)  # See 'Tests/alpha_test.py' docstring
         self.color_surfs.clear()
         for c in self.colors:
             surf = pygame.Surface((self.diameter,) * 2)
             surf.set_colorkey(COLORS["TRANSPARENT"])
             surf.fill(COLORS["TRANSPARENT"])
             pygame.draw.circle(surf, c, (self.radius,) * 2, self.radius)
+            pygame.draw.circle(surf, (0, 0, 0), (self.radius,) * 2, self.radius, width=2)
             self.color_surfs.append(surf)
 
     def get_content_height(self) -> int:
         return self.diameter * len(self.board) + self.padding_bottom
 
     def render_bubbles(self) -> None:
-        self.bubble_surf.fill(COLORS["TRANSPARENT"])
+        # self.bubble_surf.fill(COLORS["TRANSPARENT"])
+        self.bubble_surf.blit(self.grad_surf, (0, 0))
+        modified = False  # Whether the board has been modified during rendering
         for row in range(math.floor(abs(self.y_scroll_offset) // self.diameter), len(self.board)):
             for col in range(len(self.board[row])):
                 bubble = self.board[row][col]
+                cell_pos = (self.h_pos_f(row, col), row * self.diameter + self.y_scroll_offset)
                 if bubble.exists:
-                    self.bubble_surf.blit(self.color_surfs[bubble.color], (self.h_pos_f(row, col),
-                                                                           row * self.diameter + self.y_scroll_offset))
+                    self.bubble_surf.blit(self.color_surfs[bubble.color], cell_pos)
+                if bubble.preview:
+                    preview_bubble = self.color_surfs[bubble.preview_color].copy()
+                    alpha = round(self.preview_alpha.get_value())
+                    preview_bubble.set_alpha(alpha)
+                    self.cir_mid_man.blit(self.bubble_surf, (0, 0),
+                                          area=pygame.Rect(*cell_pos, self.diameter, self.diameter))
+                    self.cir_mid_man.blit(preview_bubble, (0, 0))
+                    self.bubble_surf.blit(self.cir_mid_man, cell_pos)
+                    bubble.preview = False
+                    modified = True
+        if modified:
+            self.free_ram()  # Any bubbles which no longer exist after 'b.modified = False' will be deleted.
         # Remember to not fill the surface as that would erase the rendered widgets.
         self.image.blit(self.bubble_surf, (0, 0))
 
     def update_bubbles(self, mouse_obj: "Mouse.Cursor") -> None:
         if self.editor:
-            mouse_x, mouse_y = mouse_obj.get_pos()
-            mouse_y -= self.y_scroll_offset
-            row = math.floor(mouse_y // self.diameter)
-            col = math.floor((mouse_x - (row % 2) * self.radius) // self.diameter)
-            if any((row < 0, col < 0, col > self.len_f(row) - 1, self.scrollbar.thumb.mouse_down)):
-                return None
-            if not mouse_obj.get_button_state(1):
-                return None
-            sel_color = self.nav_bar_func()
-            while row > len(self.board) - 1:
-                # Hilarious results ensue if a shallow copy of 'self.new_row' is used instead of a deep copy.
-                self.board.append(copy.deepcopy(self.new_row))
-            sel_cell = self.board[row][col]
-            if sel_color == -1:
-                sel_cell.exists = False
-                self.free_ram()
-                return None
-            if not sel_cell.exists:
-                sel_cell.exists = True
-            sel_cell.color = sel_color
+            self.editor_update_bubbles(mouse_obj)
         else:
             pass
+
+    def editor_update_bubbles(self, mouse_obj: "Mouse.Cursor") -> None:
+        mouse_x, mouse_y = mouse_obj.get_pos()
+        mouse_y -= self.y_scroll_offset
+        row = math.floor(mouse_y // self.diameter)
+        col = math.floor((mouse_x - (row % 2) * self.radius) // self.diameter)
+        if any((row < 0, col < 0, col > self.len_f(row) - 1, self.scrollbar.thumb.mouse_down)):
+            return None
+        mouse_down = mouse_obj.get_button_state(1)
+        sel_color = self.nav_bar_func()
+        if sel_color != -1:
+            while row > len(self.board) - 1:
+                # Interesting results ensue if a shallow copy of 'self.new_row' is used instead of a deep copy.
+                self.board.append(copy.deepcopy(self.new_row))
+            sel_cell = self.board[row][col]
+            if not mouse_down:
+                # For the preview bubble, the amount of alpha transparency will have to be calculated in this class.
+                sel_cell.preview = True
+                sel_cell.preview_color = sel_color
+                return None
+            sel_cell.exists = True
+            sel_cell.color = sel_color
+            sel_cell.preview = False
+            return None
+        if mouse_down and row < len(self.board):
+            sel_cell = self.board[row][col]
+            sel_cell.exists = False
+            self.free_ram()
 
     def free_ram(self) -> None:
         # Number of empty rows counting from the end of the board.
         row = len(self.board) - 1
         while row >= 0:
-            if any(i.exists for i in map(op.getitem, itools.repeat(self.board[row]), range(0, self.h_bubbles_num))):
+            if any(i.exists or i.preview for i in map(self.board[row].__getitem__, range(0, self.h_bubbles_num))):
                 break
             row -= 1
         self.board[:] = self.board[:row + 1]
 
-    def update(self, mouse_obj: "Mouse.Cursor", keyboard_events: t.List[pygame.event.Event]) -> None:
-        super().update(mouse_obj.copy(), keyboard_events)  # Process and render normal widgets
-        if self.bubble_rect.collidepoint(mouse_obj.get_pos()):
-            self.update_bubbles(mouse_obj)
+    def update(self, mouse_obj: "Mouse.Cursor", keyboard_events: tp.List[pygame.event.Event]) -> None:
+        rel_mouse = mouse_obj.copy()
+        pos = rel_mouse.get_pos()
+        rel_mouse.set_pos(pos[0] - self.x, pos[1] - self.y)
+        super().update(mouse_obj, keyboard_events)  # Process and render normal widgets
+        if self.bubble_rect.collidepoint(rel_mouse.get_pos()):
+            self.update_bubbles(rel_mouse)
         self.render_bubbles()
 
 
 class NavBar(Widgets.Frame):
-    def __init__(self, y_pos: int, size: t.Tuple[int, int], scrollbar_width: int,
-                 avail_colors: t.List[t.Tuple[int, int, int]], z_index: int, widget_name: str = "!nav_bar"):
+    def __init__(self, y_pos: int, size: tp.Tuple[int, int], scrollbar_width: int,
+                 avail_colors: tp.List[tp.Tuple[int, int, int]], z_index: int, widget_name: str = "!nav_bar"):
         """Custom widget for rendering the tool palate along the bottom of the screen in the level editor."""
         super().__init__(0, y_pos, *size, 0, bg=COLORS["GREEN"], z_index=z_index, widget_name=widget_name)
+        self.height = size[1]
         item_length = size[1] - scrollbar_width
-        self.tool_objects: t.List[NavItem] = [
+        # Needed to fit sig of 'itertools.chain', which requires all the iterables to be chained to be of the same type
+        colors: tp.List[tp.Optional[tp.Tuple[int, int, int]]] = avail_colors
+        self.tool_objects: tp.List[NavItem] = [
             self.create_item(NavItem(item_length * len(avail_colors) if idx == -1 else item_length * idx, item_length,
                                      item_length - 20, idx, self.select_event, color,
                                      widget_name="!nav_item{}".format(idx)))
-            for idx, color in itertools.chain(enumerate(avail_colors), ((-1, None),))
+            for idx, color in itertools.chain(enumerate(colors), ((-1, None),))
         ]
         self.add_widget(Widgets.ScrollBar(orientation="horizontal"))
         self.selected_idx = 0
 
-    def update(self, mouse_obj: "Mouse.Cursor", keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update_size(self, new_size: tp.Tuple[int, int]) -> None:
+        # Might be more efficient to add a method in 'Frame' to disable all automatic resizing?
+        for tl in self.tool_objects:
+            self.manual_move_widget(tl.get_widget_name(), (None, None))
+        super().update_size((new_size[0], self.height))
+
+    def update(self, mouse_obj: "Mouse.Cursor", keyboard_events: tp.List[pygame.event.Event]) -> None:
+        # print([w.get_widget_name() for w in self.child_widgets.values()], self.resize_exclude)
         super().update(mouse_obj.copy(), keyboard_events)
 
     def create_item(self, item: "NavItem") -> "NavItem":
@@ -483,8 +569,8 @@ class NavBar(Widgets.Frame):
 
 
 class NavItem(Widgets.BaseWidget):
-    def __init__(self, x_pos: int, length: int, icon_length: int, tool_id: int, sel_callback: t.Callable[[int], None],
-                 tool_color: t.Optional[t.Tuple[int, int, int]] = None, widget_name: str = "!nav_item"):
+    def __init__(self, x_pos: int, length: int, icon_length: int, tool_id: int, sel_callback: tp.Callable[[int], None],
+                 tool_color: tp.Optional[tp.Tuple[int, int, int]] = None, widget_name: str = "!nav_item"):
         super().__init__(widget_name)
         # length = size[1] - scrollbar_width; 'tool_color' should be None if 'tool_id' equals -1
         # A custom icon loaded from an image (or a special rendered icon) will be used if 'tool_id' equals -1
@@ -523,7 +609,7 @@ class NavItem(Widgets.BaseWidget):
             self.image.fill(self.current_color)
         self.image.blit(self.icon, self.icon_pos)
 
-    def update(self, mouse_obj: "Mouse.Cursor", keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update(self, mouse_obj: "Mouse.Cursor", keyboard_events: tp.List[pygame.event.Event]) -> None:
         collide = self.rect.collidepoint(*mouse_obj.get_pos())
         if not collide:
             if not mouse_obj.get_button_state(1):
@@ -545,7 +631,7 @@ class NavItem(Widgets.BaseWidget):
 
 class ScoreBoard(Widgets.Frame):
     def __init__(self, x: int, y: int, width: int, height: int, radius: int, padding: int, font: pygame.font.Font,
-                 score_data: t.Optional[t.List[t.Dict[str, str]]], score_max_width: int, z_index: int = 1,
+                 score_data: tp.Optional[tp.List[tp.Dict[str, str]]], score_max_width: int, z_index: int = 1,
                  widget_name: str = "!scoreboard"):
         super().__init__(x, y, width, height, padding, bg=COLORS["GREEN"], z_index=z_index, widget_name=widget_name)
         self.score_data = score_data
@@ -569,19 +655,19 @@ class ScoreBoard(Widgets.Frame):
             self.add_widget(label)
         self.add_widget(Widgets.ScrollBar(width=scrollbar_width))
 
-    def get_score_data(self) -> t.List[t.Dict[str, str]]:
+    def get_score_data(self) -> tp.List[tp.Dict[str, str]]:
         return [] if self.score_data is None else self.score_data
 
 
 class LoseScreen:
-    def __init__(self, parent_frame: Widgets.Frame, resolution: t.Tuple[int, int], score: "Counters.Score",
-                 callbacks: t.List[t.Callable[[], None]]):
+    def __init__(self, parent_frame: Widgets.Frame, resolution: tp.Tuple[int, int], score: "Counters.Score",
+                 callbacks: tp.List[tp.Callable[[], None]]):
         self.parent_frame = parent_frame
         self.resolution = resolution
-        self.large_font = pygame.font.Font(find_abs_path("./Fonts/Arial/normal.ttf"), 50)
-        self.small_font = pygame.font.Font(find_abs_path("./Fonts/JhengHei/normal.ttc"), 16)
+        self.large_font = pygame.font.SysFont("arial", 50)
+        self.small_font = pygame.font.SysFont(cjk_fonts, 16)
         self.score = score
-        self.state: t.Literal["idle", "fetching", "writing"] = "idle"
+        self.state: tp.Literal["idle", "fetching", "writing"] = "idle"
         self.widget_id = 1
         self.padding = 20
         self.accumulated_y = self.padding * 6
@@ -593,15 +679,15 @@ class LoseScreen:
         self.scoreboard_rect = pygame.Rect(self.resolution[0] / 2 - scoreboard_size[0] / 2, self.accumulated_y,
                                            scoreboard_size[0], scoreboard_size[1])
         self.db_thread = Storage.ScoreDB()
-        self.scoreboard_obj: t.Optional[ScoreBoard] = None
+        self.scoreboard_obj: tp.Optional[ScoreBoard] = None
         self.accumulated_y += scoreboard_size[1] + self.padding
         v_pack_buttons(resolution, self.parent_frame, ["Retry", "Main Menu"], [(144, 69), (230, 69)],
                        callbacks, self.large_font, self.padding, start_y=self.accumulated_y)
 
-    def get_score_position(self) -> t.Tuple[float, int]:
+    def get_score_position(self) -> tp.Tuple[float, int]:
         return self.score_pos
 
-    def update(self) -> t.Literal["loading", "fetch_done", "done"]:
+    def update(self) -> tp.Literal["loading", "fetch_done", "done"]:
         current_state = self.state
         if self.db_thread.is_busy():
             return "loading"
@@ -612,7 +698,7 @@ class LoseScreen:
             elif current_state == "writing" or current_state == "idle":
                 return "done"
 
-    def add_centered_label(self, text: str, color: t.Tuple[int, int, int]) -> None:
+    def add_centered_label(self, text: str, color: tp.Tuple[int, int, int]) -> None:
         label = Widgets.Label(0, 0, text, color, self.resolution[0] - 2 * self.padding, self.large_font,
                               widget_name="!label{}".format(self.widget_id))
         label.update_position(self.resolution[0] / 2 - label.get_size()[0] / 2, self.accumulated_y)
@@ -627,7 +713,7 @@ class LoseScreen:
         self.state = "fetching"
         self.db_thread.start_fetch_scores()
 
-    def update_scoreboard(self, database_data: t.Optional[t.List[t.Dict[str, str]]], delete_old: bool = True):
+    def update_scoreboard(self, database_data: tp.Optional[tp.List[tp.Dict[str, str]]], delete_old: bool = True):
         if delete_old:
             self.parent_frame.delete_widget("!scoreboard")
         score_width = 40
@@ -664,8 +750,8 @@ class LoseScreen:
 
 
 class HelpManager:
-    def __init__(self, parent_frame: Widgets.Frame, resolution: t.Tuple[int, int], font: pygame.font.Font,
-                 resize_func: t.Callable[[], None], callback: t.Callable[[], None]):
+    def __init__(self, parent_frame: Widgets.Frame, resolution: tp.Tuple[int, int], font: pygame.font.Font,
+                 resize_func: tp.Callable[[], None], callback: tp.Callable[[], None]):
         # This class should handle all UI events. Should contain a method that returns a boolean indicating whether the
         # loading animation should continue to be shown.
         self.parent_frame = parent_frame
@@ -753,10 +839,10 @@ class HelpManager:
 
 class AchievementFrame(Widgets.Frame):
     def __init__(self, x: int, y: int, width: int, height: int, radius: int, padding: int,
-                 achievement_data: t.List[bool], string_callback: t.Callable[[int], t.Tuple[str, str]],
-                 heading_font: pygame.font.Font, body_font: pygame.font.Font, fg: t.Tuple[int, int, int],
-                 div_bg: t.Tuple[int, int, int, int], active_bg: t.Tuple[int, int, int],
-                 locked_bg: t.Tuple[int, int, int], z_index: int = 1, widget_name: str = "!achievement_frame"):
+                 achievement_data: tp.List[bool], string_callback: tp.Callable[[int], tp.Tuple[str, str]],
+                 heading_font: pygame.font.Font, body_font: pygame.font.Font, fg: tp.Tuple[int, int, int],
+                 div_bg: tp.Tuple[int, int, int, int], active_bg: tp.Tuple[int, int, int],
+                 locked_bg: tp.Tuple[int, int, int], z_index: int = 1, widget_name: str = "!achievement_frame"):
         super().__init__(x, y, width, height, padding, bg=div_bg, z_index=z_index, widget_name=widget_name)
         scrollbar_width = 20
         accumulated_y = padding
@@ -774,9 +860,9 @@ class AchievementFrame(Widgets.Frame):
 
 
 class AchievementManager:
-    def __init__(self, parent_frame: Widgets.Frame, resolution: t.Tuple[int, int], button_font: pygame.font.Font,
+    def __init__(self, parent_frame: Widgets.Frame, resolution: tp.Tuple[int, int], button_font: pygame.font.Font,
                  heading_font: pygame.font.Font, body_font: pygame.font.Font,
-                 string_callback: t.Callable[[int], t.Tuple[str, str]], exit_callback: t.Callable[[], None]):
+                 string_callback: tp.Callable[[int], tp.Tuple[str, str]], exit_callback: tp.Callable[[], None]):
         self.parent_frame = parent_frame
         self.heading_font = heading_font
         self.body_font = body_font
@@ -789,10 +875,10 @@ class AchievementManager:
         content_y = 2 * padding + back_btn.height
         self.content_rect = pygame.Rect(padding, content_y, resolution[0] - 2 * padding,
                                         resolution[1] - content_y - padding)
-        self.content_obj: t.Optional[AchievementFrame] = None
+        self.content_obj: tp.Optional[AchievementFrame] = None
         self.content_id = "!achievement_frame"
 
-    def update_data(self, state_data: t.List[bool]) -> None:
+    def update_data(self, state_data: tp.List[bool]) -> None:
         if self.content_obj is not None:
             self.parent_frame.delete_widget(self.content_id)
         self.content_obj = AchievementFrame(self.content_rect.x, self.content_rect.y, self.content_rect.width,
@@ -804,13 +890,13 @@ class AchievementManager:
 
 
 class BusyFrame:
-    def __init__(self, resolution: t.Tuple[int, int], font: pygame.font.Font, alpha: int, size: int, thickness: int,
-                 lit_length: int, speed: t.Union[int, float], unlit_color: t.Tuple[int, int, int],
-                 lit_color: t.Tuple[int, int, int]):
+    def __init__(self, resolution: tp.Tuple[int, int], font: pygame.font.Font, alpha: int, size: int, thickness: int,
+                 lit_length: int, speed: tp.Union[int, float], unlit_color: tp.Tuple[int, int, int],
+                 lit_color: tp.Tuple[int, int, int]):
         padding = 20
-        self.widgets: t.Dict[str, t.Optional[t.Union[Widgets.BaseWidget,
-                                                     Widgets.BaseOverlay]]] = {}
-        self.z_order: t.List[str] = []
+        self.widgets: tp.Dict[str, tp.Optional[tp.Union[Widgets.BaseWidget,
+                                                        Widgets.BaseOverlay]]] = {}
+        self.z_order: tp.List[str] = []
         label = Widgets.Label(0, 0, "Loading...", COLORS["WHITE"], resolution[0] - 2 * padding, font)
         frame_height = size + padding + label.get_size()[1]
         frame_y = resolution[1] / 2 - frame_height / 2
@@ -825,7 +911,7 @@ class BusyFrame:
         self.reset_animation()
 
     def add_widget(self, widget_id: str,
-                   widget_obj: t.Optional[t.Union[Widgets.BaseWidget, Widgets.BaseOverlay]]) -> None:
+                   widget_obj: tp.Optional[tp.Union[Widgets.BaseWidget, Widgets.BaseOverlay]]) -> None:
         self.widgets[widget_id] = widget_obj
         self.z_order.append(widget_id)
 
@@ -833,7 +919,7 @@ class BusyFrame:
         """Resets the loading animation."""
         self.widgets["spinner"] = Widgets.Spinner(*self.spinner_args)
 
-    def update(self, mouse_obj: "Mouse.Cursor", keyboard_events: t.List[pygame.event.Event]) -> None:
+    def update(self, mouse_obj: "Mouse.Cursor", keyboard_events: tp.List[pygame.event.Event]) -> None:
         # 'Spinner' is the only widget in this class that needs to be updated.
         # 'BaseOverlay' does not have an update method, and the update method of 'Label' only runs 'pass'.
         self.widgets["spinner"].update(mouse_obj, keyboard_events)

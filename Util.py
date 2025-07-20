@@ -1,8 +1,13 @@
+"""Miscellaneous functions and classes that are useful throughout the project."""
 from string import ascii_uppercase
 from contextlib import suppress
-import typing as t
+import numpy as np
+import typing as tp
 from os import path
+import math
+import Time
 import platform
+import functools
 import subprocess
 import pygame.transform
 with suppress(ImportError):
@@ -37,7 +42,43 @@ temp_path = {"Windows": "%temp%",
 current_os = platform.system()
 
 
-def get_platform_data_path(purpose: t.Literal["global", "user"]) -> str:
+class SinWave:
+    def __init__(self, **coefficients: tp.Union[int, float]):
+        """Customizable sin wave in the form of **y = a×sin(b×x − c) + d** that uses time as input. The coefficients
+        can be modified after constructed if needed.
+
+        :param coefficients: Can contain values to use for a, b, c, and d.
+        """
+        self.coefficients = coefficients
+        self._timer = Time.Time()
+        self._timer.reset_timer()
+
+    def get_value(self) -> float:
+        a, b, c, d = (self.coefficients.get(var, 1 - i // 2) for i, var in enumerate("abcd"))
+        x = self._timer.get_time()
+        period = self.get_period()
+        value = a * math.sin(b * x - c) + d
+        self._timer.force_elapsed_time(x % period)  # Keeps sin wave within the first period.
+        return value
+
+    def get_magnitude(self, half: bool = False) -> tp.Union[int, float]:
+        a = self.coefficients.get("a", 1)
+        return a if half else 2 * a
+
+    def get_period(self) -> float:
+        b = self.coefficients.get("b", 1)
+        return (2 * math.pi) / abs(b)
+
+    @staticmethod
+    def sin_between_two_pts(pt1: tp.Union[int, float], pt2: tp.Union[int, float], freq: tp.Union[int, float] = 1,
+                            h_shift: tp.Union[int, float] = 0) -> "SinWave":
+        """Constructs a sin wave whose highest and lowest point stops at the two points given."""
+        a, b, c = abs(pt2 - pt1) / 2, freq, h_shift
+        d = max(pt1, pt2) - a
+        return SinWave(a=a, b=b, c=c, d=d)
+
+
+def get_platform_data_path(purpose: tp.Literal["global", "user"]) -> str:
     location = ""
     if purpose == "global":
         location = global_app_data.get(current_os, global_app_data["Linux"])
@@ -61,8 +102,9 @@ def collide_function(sprite1: pygame.sprite.Sprite, sprite2: pygame.sprite.Sprit
 
 
 def resize_surf(display_surf: pygame.Surface,
-                size: t.Union[t.List[t.Union[int, float]], t.Tuple[t.Union[int, float], t.Union[int, float]]],
-                size_only: bool = False) -> t.Union[pygame.Surface, t.Tuple[t.Union[int, float], t.Union[int, float]]]:
+                size: tp.Union[tp.List[tp.Union[int, float]], tp.Tuple[tp.Union[int, float], tp.Union[int, float]]],
+                size_only: bool = False) -> tp.Union[pygame.Surface,
+                                                     tp.Tuple[tp.Union[int, float], tp.Union[int, float]]]:
     current_size = display_surf.get_size()
     if current_size[0] * (size[1] / current_size[1]) < size[0]:
         new_size = (current_size[0] * (size[1] / current_size[1]), size[1])
@@ -74,28 +116,28 @@ def resize_surf(display_surf: pygame.Surface,
         return pygame.transform.scale(display_surf, new_size)
 
 
-def dilate_coordinates(pos: t.Tuple[int, int], fixed_size: t.Tuple[int, int], current_size: t.List,
-                       resized_surf: t.Tuple[int, int]) -> t.Tuple[float, float]:
+def dilate_coordinates(pos: tp.Tuple[int, int], fixed_size: tp.Tuple[int, int], current_size: tp.List,
+                       resized_surf: tp.Tuple[int, int]) -> tp.Tuple[float, float]:
     offset_pos = ((current_size[0] - resized_surf[0]) / 2, (current_size[1] - resized_surf[1]) / 2)
     return (offset_pos[0] + (resized_surf[0] * (pos[0] / fixed_size[0])),
             offset_pos[1] + (resized_surf[1] * (pos[1] / fixed_size[1])))
 
 
-def resize_mouse_pos(pos: t.Tuple[int, int],
-                     fixed_size: t.Tuple[int, int],
-                     current_size: t.List,
-                     resized_surf: t.Tuple[int, int]) -> t.Tuple[float, float]:
+def resize_mouse_pos(pos: tp.Tuple[int, int],
+                     fixed_size: tp.Tuple[int, int],
+                     current_size: tp.List,
+                     resized_surf: tp.Tuple[int, int]) -> tp.Tuple[float, float]:
     offset_pos = (pos[0] - ((current_size[0] - resized_surf[0]) / 2),
                   pos[1] - ((current_size[1] - resized_surf[1]) / 2))
-    return (fixed_size[0] * (offset_pos[0] / resized_surf[0])),\
+    return (fixed_size[0] * (offset_pos[0] / resized_surf[0])), \
            (fixed_size[1] * (offset_pos[1] / resized_surf[1]))
 
 
 def draw_rounded_rect(surface: pygame.Surface,
-                      pos: t.Tuple[int, int],
-                      size: t.Tuple[t.Union[int, float], t.Union[int, float]],
+                      pos: tp.Tuple[int, int],
+                      size: tp.Tuple[tp.Union[int, float], tp.Union[int, float]],
                       radius: int,
-                      color: t.Tuple[int, int, int]) -> None:
+                      color: tp.Tuple[int, int, int]) -> None:
     positions = ([pos[0] + radius, pos[1] + radius],
                  [pos[0] + size[0] - radius, pos[1] + radius],
                  [pos[0] + radius, pos[1] + size[1] - radius],
@@ -112,8 +154,8 @@ def draw_button(surface: pygame.Surface,
                 width: int,
                 height: int,
                 border: int,
-                fg: t.Tuple[int, int, int],
-                bg: t.Tuple[int, int, int],
+                fg: tp.Tuple[int, int, int],
+                bg: tp.Tuple[int, int, int],
                 font: pygame.font.Font,
                 text: str) -> None:
     current_size = font.size(text)
@@ -142,9 +184,9 @@ def draw_button(surface: pygame.Surface,
 
 
 def draw_vtp_rounded_rect(surface: pygame.Surface,
-                          pos: t.Tuple[int, int],
-                          size: t.Tuple[int, int],
-                          color: t.Tuple[int, int, int]) -> None:
+                          pos: tp.Tuple[int, int],
+                          size: tp.Tuple[int, int],
+                          color: tp.Tuple[int, int, int]) -> None:
     # v.t.p. = vertical two-point
     y_positions = (pos[1] + size[0] / 2, pos[1] + size[1] - size[0] / 2)
     for y in y_positions:
@@ -153,10 +195,10 @@ def draw_vtp_rounded_rect(surface: pygame.Surface,
 
 
 def draw_triangle(surface: pygame.Surface,
-                  pos: t.Tuple[int, int],
-                  size: t.Tuple[int, int],
-                  color: t.Tuple[int, int, int],
-                  direction: t.Literal["up", "down", "left", "right"]) -> None:
+                  pos: tp.Tuple[int, int],
+                  size: tp.Tuple[int, int],
+                  color: tp.Tuple[int, int, int],
+                  direction: tp.Literal["up", "down", "left", "right"]) -> None:
     # Draws upward triangle if flip is False.
     if direction == "up":
         vertices = ((pos[0], pos[1] + size[1] - 1), (pos[0] + size[0] - 1, pos[1] + size[1] - 1),
@@ -171,9 +213,9 @@ def draw_triangle(surface: pygame.Surface,
     pygame.draw.polygon(surface, color, vertices)
 
 
-def draw_arrow(surface: pygame.Surface, color: t.Tuple[int, int, int],
-               pos: t.Tuple[t.Union[int, float], t.Union[int, float]], size: t.Tuple[int, int],
-               direction: t.Literal["up", "down", "left", "right"], thickness: int) -> None:
+def draw_arrow(surface: pygame.Surface, color: tp.Tuple[int, int, int],
+               pos: tp.Tuple[tp.Union[int, float], tp.Union[int, float]], size: tp.Tuple[int, int],
+               direction: tp.Literal["up", "down", "left", "right"], thickness: int) -> None:
     if direction == "up":
         vertices = ((pos[0], pos[1] + size[1]), (pos[0] + size[0] / 2, pos[1]), (pos[0] + size[0], pos[1] + size[1]))
     elif direction == "down":
@@ -186,17 +228,76 @@ def draw_arrow(surface: pygame.Surface, color: t.Tuple[int, int, int],
 
 
 def draw_cross(surface: pygame.Surface,
-               pos: t.Tuple[int, int],
-               size: t.Tuple[int, int],
+               pos: tp.Tuple[int, int],
+               size: tp.Tuple[int, int],
                width: int,
-               color: t.Tuple[int, int, int]) -> None:
+               color: tp.Tuple[int, int, int]) -> None:
     lines = ((pos, (pos[0] + size[0] - 1, pos[1] + size[1] - 1)),
              ((pos[0] + size[0] - 1, pos[1]), (pos[0], pos[1] + size[1] - 1)))
     for line in lines:
         pygame.draw.line(surface, color, line[0], line[1], width=width)
 
 
-def word_wrap_text(string: str, width: int, font: pygame.font.Font, br: str = "-") -> t.List[str]:
+@tp.overload
+def rgb_to_hex(color: tp.Union[tp.Tuple[int, int, int], tp.Tuple[int, int, int, int]],
+               return_: tp.Type[str], upper: tp.Optional[bool] = False) -> str:
+    pass
+
+
+@tp.overload
+def rgb_to_hex(color: tp.Union[tp.Tuple[int, int, int], tp.Tuple[int, int, int, int]],
+               return_: tp.Type[int]) -> int:
+    pass
+
+
+@functools.lru_cache
+def rgb_to_hex(color: tp.Union[tp.Tuple[int, int, int], tp.Tuple[int, int, int, int]],
+               return_: tp.Type[tp.Union[str, int]], upper: tp.Optional[bool] = False) -> tp.Union[str, int]:
+    """Converts a tuple of integers representing an RGB color to the type given to 'return_'. If 'return_' is given
+    'str', the color is converted to a string representing a hex code. If given 'int', an integer with the same value
+    as the hex representation of the color is returned."""
+    if return_ is str:
+        return ("%02{}".format("X" if upper else "x") * len(color)) % color
+    # TODO: Improve 'rgb_to_hex' and 'hex_to_rgb':
+    #  rgb: Tuple[int, int, int], Tuple[int, int, int, int]
+    #  hex: str (RRGGBB), int (hex literal)
+
+
+@functools.lru_cache
+def hex_to_rgb(hex_color: tp.Union[str, int]) -> tp.Union[tp.Tuple[int, int, int], tp.Tuple[int, int, int, int]]:
+    """Converts a string hex color to a tuple of integers. The string should not be prefixed with a hash symbol.
+    If the hex color is a numeric or hexadecimal number, first use the 'hex' builtin function to convert it to a string.
+    """
+    if isinstance(hex_color, int):
+        hex_color = "%08x" % hex_color
+    # noinspection PyTypeChecker
+    return tuple(int(hex_color[chl:chl + 2], base=16) for chl in range(0, len(hex_color), 2))
+
+
+def decode_rgb_array(mapped_array: np.ndarray) -> np.ndarray:
+    @np.vectorize(doc="Accepts a 2D numpy array of numeric literals representing hex colors, and returns a tuple of "
+                      "four 2D arrays representing each decoded color channel.",
+                  otypes=[int],
+                  signature="()->(n)")  # noqa
+    def decode_rgb_channels(hex_: int) -> np.ndarray:
+        """Takes a hexadecimal number representing an RGB color and decodes it to a 4-item tuple representing the RGBA
+        channels. If the number given doesn't include the 'alpha' channel, it would be `0` in the returned tuple."""
+        print(hex_)
+        str_hex = hex(hex_)[2:]  # the slice is for stripping the "0x" prefix.
+        if len(str_hex) == 6:  # hex literal is in the form of `RRGGBB` instead of `RRGGBBAA`
+            str_hex += "ff"  # append `AA` to end of `RRGGBB` value
+        color = np.array(hex_to_rgb(str_hex))
+        print("color", color)
+        return color
+    # `np.concatenate((a[:, :, np.newaxis], b[:, :, np.newaxis]), axis=2)` = make the innermost dimensions (the
+    # scalar data) of both 'a' and 'b' one-item arrays, and then concatenate at the innermost dimension
+    channels = decode_rgb_channels(mapped_array)  # noqa
+    print(channels)
+    return channels
+    # return np.concatenate(tuple(arr[:, :, np.newaxis] for arr in decode_rgb_channels(mapped_array)), axis=2)  # noqa
+
+
+def word_wrap_text(string: str, width: int, font: pygame.font.Font, br: str = "-") -> tp.List[str]:
     lines, break_locations = [[]], []
     for index, char in enumerate(string):
         if char == " ":
@@ -245,7 +346,7 @@ def launch_file_mgr(file_path: str) -> None:
                 subprocess.Popen(["xdg-open", file_path], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
-def get_drive_letters() -> t.Optional[t.List[str]]:
+def get_drive_letters() -> tp.Optional[tp.List[str]]:
     """Returns all available drive letters. Returns a list on success, or None on error. Only works on Windows."""
     if current_os != "Windows":
         return None
@@ -279,7 +380,7 @@ def configure_dpi() -> None:
 def post_win8_config_dpi() -> bool:
     try:
         windll.shcore.SetProcessDpiAwareness(2)
-    except (OSError, AttributeError):
+    except (NameError, OSError, AttributeError):
         return False
     else:
         return True
@@ -288,7 +389,31 @@ def post_win8_config_dpi() -> bool:
 def pre_win8_config_dpi() -> bool:
     try:
         windll.shcore.SetProcessDPIAware()
-    except (OSError, AttributeError):
+    except (NameError, OSError, AttributeError):
         return False
     else:
         return True
+
+
+def output_3d_array(arr: np.ndarray) -> None:
+    """Outputs the full contents of a 3D array with the same row of pixels on the same row in the output."""
+    print("[", end="")
+    rows = arr.shape[0]
+    cols = arr.shape[1]
+    if len(arr.shape) < 3:
+        formatter = lambda x: "%6.2f" % x  # noqa
+    elif arr.shape[-1] == 2:
+        formatter = lambda x: "[%3d %3d]" % tuple(x)  # noqa
+    else:
+        formatter = lambda x: "[%3d %3d %3d]" % tuple(x)  # noqa
+    for r in range(rows):
+        for c in range(cols):
+            print(formatter(arr[r][c]), end=" " if c < cols - 1 else "")
+        print(end="\n\x20" if r < rows - 1 else "]\n")
+
+
+if __name__ == "__main__":
+    color_2d = np.array(((0x000001, 0x000002, 0x000003),
+                         (0x000004, 0x000005, 0x000006),
+                         (0x000007, 0x000008, 0x000009)))
+    color_3d = decode_rgb_array(color_2d)

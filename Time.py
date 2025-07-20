@@ -3,6 +3,8 @@ import pygame.time
 
 class Time:
     def __init__(self):
+        """Simple timer class that uses the difference of return values from `pygame.time.get_ticks()` to keep time.
+        Pygame should be initialized before using this class, or else it will not work correctly."""
         self.timer = 0
         self.previous_result = 0
         self.paused = False

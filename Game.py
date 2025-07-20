@@ -1,7 +1,6 @@
-import typing as t
 from Util import COLORS, find_abs_path
 from functools import partial
-from random import randint
+import typing as tp
 import Notifier
 import Dialogs
 import Storage
@@ -13,30 +12,30 @@ DIALOG_MIN_RES = (943, 592)
 
 
 class SpecialWidget:
-    def __init__(self, special_widget: t.Any):
+    def __init__(self, special_widget: tp.Any):
         self.initialized = False
         self.special_widget = special_widget
 
-    def resize_widget(self, new_size: t.Tuple[int, int]) -> None:
+    def resize_widget(self, new_size: tp.Tuple[int, int]) -> None:
         if issubclass(self.special_widget.__class__, Widgets.BaseOverlay):
             self.special_widget.resize(new_size)
         elif isinstance(self.special_widget, Dialogs.BusyFrame):
             self.special_widget.widgets["overlay"].resize(new_size)
 
-    def fetch_for_update(self) -> t.Any:
+    def fetch_for_update(self) -> tp.Any:
         if not self.initialized:
             self.initialized = True
         return self.special_widget
 
-    def fetch_for_draw(self) -> t.Optional[t.Any]:
+    def fetch_for_draw(self) -> tp.Optional[tp.Any]:
         if self.initialized:
             return self.special_widget
         else:
             return None
 
 
-class BaseLoop:
-    def __init__(self, screen: pygame.Surface, hardware_res: t.Tuple[int, int], window_res: t.Tuple[int, int]):
+class BaseSetup:
+    def __init__(self, screen: pygame.Surface, hardware_res: tp.Tuple[int, int], window_res: tp.Tuple[int, int]):
         # region Pygame Setup
         self.hardware_res = hardware_res
         self.window_res = window_res
@@ -51,20 +50,20 @@ class BaseLoop:
         # endregion
 
 
-class MainLoop(BaseLoop):
-    def __init__(self, screen: pygame.Surface, hardware_res: t.Tuple[int, int], window_res: t.Tuple[int, int],
-                 err_modules: t.Dict[str, str]):
+class MainLoop(BaseSetup):
+    def __init__(self, screen: pygame.Surface, hardware_res: tp.Tuple[int, int], window_res: tp.Tuple[int, int],
+                 err_modules: tp.Dict[str, str]):
         super().__init__(screen, hardware_res, window_res)
         self.og_res = window_res
         self.achmt_strs = Storage.AchievementData()
         self.achmt_db = Storage.AchievementDB(self.achmt_strs.get_achievement_len())
         self.achmt_strs.load_achievements(self.achmt_db.read_data(), self.achmt_db.set_achievement)
         # region Widget Setup
-        self.special_widgets: t.Dict[str, SpecialWidget] = {}  # For widgets that paint over all other objects.
-        self.ui_mgr: t.Optional[t.Any] = None  # Holds class instances for managing more complicated page layouts.
-        self.key_events: t.List[pygame.event.Event] = []  # Holds events that the UI needs to know about.
-        self.game_board: t.Optional[Dialogs.LevelBoard] = None
-        self.display_frame: t.Optional[Widgets.Frame] = None  # The frame object holding all widgets.
+        self.special_widgets: tp.Dict[str, SpecialWidget] = {}  # For widgets that paint over all other objects.
+        self.ui_mgr: tp.Optional[tp.Any] = None  # Holds class instances for managing more complicated page layouts.
+        self.key_events: tp.List[pygame.event.Event] = []  # Holds events that the UI needs to know about.
+        self.game_board: tp.Optional[Dialogs.LevelBoard] = None
+        self.display_frame: tp.Optional[Widgets.Frame] = None  # The frame object holding all widgets.
         self.notifiers = Notifier.ToastGroup(self.window_res,
                                              {i: pygame.image.load(
                                                  find_abs_path("./Images/toast_icons/{}.png" .format(i)))
@@ -74,7 +73,7 @@ class MainLoop(BaseLoop):
         for msg in err_modules.values():
             self.notifiers.create_toast("error", "Application Error", msg)
         self._wid = 1  # widget_id
-        self.font = pygame.font.Font(find_abs_path("./Fonts/Arial/normal.ttf"), 40)
+        self.font = pygame.font.SysFont("arial", 40)
         self.busy_frame = Dialogs.BusyFrame(self.window_res, self.font, 100, 125, 19, 90, 250, (205, 205, 205),
                                             (26, 134, 219))
         # Z-order = 1: toast-group, 2: transition/load-frame, 3: top-levels, 4: widget-frame, 5:game sprites
@@ -87,7 +86,7 @@ class MainLoop(BaseLoop):
         fps = 60
         game_run = True
         # endregion
-        self.display_frame: t.Optional[Widgets.Frame] = None
+        self.display_frame: tp.Optional[Widgets.Frame] = None
         self.title_init()
         while game_run:
             self.clock.tick(fps)
@@ -104,9 +103,9 @@ class MainLoop(BaseLoop):
                 elif event.type == pygame.VIDEORESIZE and not self.full_screen:
                     self.resized = True
                     # noinspection PyTypeChecker
-                    self.window_res: t.Tuple[int, int] = tuple(new_res
-                                                               if new_res >= GAME_MIN_RES[i] else GAME_MIN_RES[i]
-                                                               for i, new_res in enumerate((event.w, event.h)))
+                    self.window_res: tp.Tuple[int, int] = tuple(new_res
+                                                                if new_res >= GAME_MIN_RES[i] else GAME_MIN_RES[i]
+                                                                for i, new_res in enumerate((event.w, event.h)))
                     self.screen = pygame.display.set_mode(self.window_res, pygame.RESIZABLE)
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     self.mouse_obj.set_button_state(event.button, True)
@@ -236,8 +235,8 @@ class MainLoop(BaseLoop):
         self.current_scr = "achievements"
         self.reset_frame()
         self.ui_mgr = Dialogs.AchievementManager(self.display_frame, self.og_res, self.font,
-                                                 pygame.font.Font(find_abs_path("./Fonts/Arial/bold.ttf"), 25),
-                                                 pygame.font.Font(find_abs_path("./Fonts/Arial/normal.ttf"), 23),
+                                                 pygame.font.SysFont("arial", 25),
+                                                 pygame.font.SysFont("arial", 23),
                                                  self.achmt_strs.get_achievement_string,
                                                  partial(self.start_transition, self.title_init))
         self.ui_mgr.update_data(self.achmt_strs.get_state_data())
@@ -247,16 +246,18 @@ class MainLoop(BaseLoop):
         initialize the level data structure. After calling this function, proceed to initialize the display frame for
         the respective screen. If switching into the level editor when a level is already loaded, it is not needed to
         go through this method, since the level data structure would already be initialized."""
+        if self.game_board is not None:
+            return None
         self.current_scr = "game"
         self.reset_frame()
         self.game_board = Dialogs.LevelBoard(self.og_res, 9, 90, 20, z_index=4)
         self.display_frame.add_widget(self.game_board)
         self.game_board.toggle_editor()
 
-    def scene_trans(self, call: t.Callable) -> SpecialWidget:
+    def scene_trans(self, call: tp.Callable) -> SpecialWidget:
         return SpecialWidget(Widgets.SceneTransition(self.window_res[0], self.window_res[1], 400, call))
 
-    def start_transition(self, call_func: t.Callable):
+    def start_transition(self, call_func: tp.Callable):
         self.special_widgets["transition"] = self.scene_trans(call_func)
 
     def add_achievement(self, index: int) -> None:
@@ -282,135 +283,3 @@ class MainLoop(BaseLoop):
             self.screen = pygame.display.set_mode(self.hardware_res, pygame.FULLSCREEN)
         else:
             self.screen = pygame.display.set_mode(self.window_res, pygame.RESIZABLE)
-
-
-"""
-class AskOpenFilename(BaseLoop):
-    def __init__(self, screen: pygame.Surface, hardware_res: t.Tuple[int, int], window_res: t.Tuple[int, int],
-                 file_endings: t.List[str]):
-        super().__init__(screen, hardware_res, window_res)
-        self.file_endings = file_endings
-        self.key_events: t.List[pygame.event.Event] = []
-        # region UI Setup
-        self.s_bar_size = 20
-        self.arial_font = pygame.font.Font(find_abs_path("./Fonts/Arial/normal.ttf"), 20)
-        self.arial_bold = pygame.font.Font(find_abs_path("./Fonts/Arial/bold.ttf"), 20)
-        self.jhenghei_font = pygame.font.Font(find_abs_path("./Fonts/JhengHei/normal.ttc"), 23)
-        self.display_frame: t.Optional[Widgets.Frame] = Widgets.Frame(0, 0, window_res[0], window_res[1], 50,
-                                                                      COLORS["GREY1"])
-        self.display_frame.add_widget(Widgets.AnimatedSurface(10, 10, self.render_basic_button((40, 40), 5, "←",
-                                                                                               self.arial_bold,
-                                                                                               (128, 128, 128),
-                                                                                               COLORS["GREY1"]),
-                                                              lambda: None, widen_amount=10, widget_name="!button1"))
-        self.display_frame.add_widget(Widgets.AnimatedSurface(60, 10, self.render_basic_button((40, 40), 5, "→",
-                                                                                               self.arial_bold,
-                                                                                               (128, 128, 128),
-                                                                                               COLORS["GREY1"]),
-                                                              lambda: None, widen_amount=10, widget_name="!button2"))
-        self.display_frame.add_widget(Widgets.AnimatedSurface(110, 10, self.render_basic_button((40, 40), 5, "↑",
-                                                                                                self.arial_bold,
-                                                                                                (128, 128, 128),
-                                                                                                COLORS["GREY1"]),
-                                                              lambda: None, widen_amount=10, widget_name="!button3"))
-        self.path_ent = Widgets.Entry(170, 15, 550, 40, 5, self.jhenghei_font, COLORS["BLACK"], widget_name="!path_ent")
-        self.display_frame.add_widget(self.path_ent)
-        self.tree_view = Widgets.DirTree(10, 60, 200, 420, self.jhenghei_font, 30, self.s_bar_size, 1, 5,
-                                         lambda s: None)
-        self.display_frame.add_widget(self.tree_view)
-        self.display_frame.add_widget(Widgets.AnimatedSurface(730, 10, self.render_basic_button((40, 40), 5, "○",
-                                                                                                self.arial_bold,
-                                                                                                (128, 128, 128),
-                                                                                                COLORS["GREY1"]),
-                                                              self.tree_view.refresh, widen_amount=10,
-                                                              widget_name="!button4"))
-        self.display_frame.add_widget(Widgets.Label(72.5, 493, "Filename:", COLORS["BLACK"], 100, self.arial_font,
-                                                    align="left"))
-        self.filename_ent = Widgets.Entry(170.5, 488, 400, 35, 5, self.jhenghei_font, COLORS["BLACK"],
-                                          widget_name="!filename_ent")
-        self.file_types = ("All Files (*.*)",
-                           "Plain Text Files (*.txt)",
-                           "Portable Network Graphics (*.png)",
-                           "Bitmap Image File (*.bmp)",
-                           "Portable Document Format (*.pdf)",
-                           "Structured Query Language File (*.sql)",
-                           "Hyper-Text Markup Language (*.html)",
-                           "Cascading Style-Sheet (*.css)",
-                           "Javascript Files (*.js)",
-                           "Windows PE Executable (*.exe)",
-                           "MS-DOS Executable (*.com)",
-                           "Screensaver Program (*.scr)",
-                           "Microsoft Installer Database (*.msi)",
-                           "Batch script (*.bat)",
-                           "Dynamic linked library (*.dll)",
-                           "Icon File (*.ico)",
-                           "Python Script (*.py)",
-                           "Python Script (no console) (*.pyw)",
-                           "CPython Cache File (*.pyc)",
-                           "ZIP Archive (*.zip)",
-                           "7-Zip Archive File (*.7z)")
-        self.opt_menu = Widgets.OptionMenu((575, 488), (300, 35), 5, self.arial_font, self.file_types, "top", 400)
-        self.display_frame.add_widget(self.opt_menu)
-        self.display_frame.add_widget(self.filename_ent)
-        self.display_frame.add_widget(Widgets.Button(590, 529, 100, 40, 1, COLORS["BLACK"], (225, 225, 225),
-                                                     self.arial_font, "Open", self.test, widen_amount=40,
-                                                     widget_name="!button5"))
-        self.display_frame.add_widget(Widgets.Button(730, 529, 100, 40, 1, COLORS["BLACK"], (225, 225, 225),
-                                                     self.arial_font, "Cancel", lambda: None, widen_amount=40,
-                                                     widget_name="!button6"))
-        # endregion
-        self.mouse_obj = Mouse.Cursor()
-        fps = 60
-        game_run = True
-        while game_run:
-            self.clock.tick(fps)
-            self.key_events.clear()
-            self.mouse_obj.reset_scroll()
-            resized = False
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    game_run = False
-                elif event.type == pygame.WINDOWENTER:
-                    self.mouse_obj.mouse_enter()
-                elif event.type == pygame.WINDOWLEAVE:
-                    self.mouse_obj.mouse_leave()
-                elif event.type == pygame.VIDEORESIZE:
-                    resized = True
-                    self.window_res = tuple(new_res if new_res >= DIALOG_MIN_RES[i] else DIALOG_MIN_RES[i]
-                                            for i, new_res in enumerate((event.w, event.h)))
-                    self.screen = pygame.display.set_mode(self.window_res, pygame.RESIZABLE)
-                elif event.type == pygame.MOUSEBUTTONDOWN:
-                    self.mouse_obj.set_button_state(event.button, True)
-                elif event.type == pygame.MOUSEBUTTONUP:
-                    self.mouse_obj.set_button_state(event.button, False)
-                elif event.type == pygame.MOUSEWHEEL:
-                    self.mouse_obj.push_scroll(event.x, event.y)
-                elif event.type in (pygame.WINDOWFOCUSLOST, pygame.KEYDOWN, pygame.KEYUP, pygame.TEXTINPUT,
-                                    pygame.TEXTEDITING):
-                    if event.type == pygame.KEYDOWN and event.key == pygame.K_a and event.mod & pygame.KMOD_ALT:
-                        show_messagebox("Info", "Hello, world! Lorem ipsum dolor sit amet.", 0x0 | 0x40)
-                    self.key_events.append(event)
-            self.mouse_obj.set_pos(*pygame.mouse.get_pos())
-            self.mouse_obj.reset_z_index()
-            if resized:
-                # noinspection PyTypeChecker
-                self.display_frame.update_size(self.window_res)
-            self.display_frame.update(self.mouse_obj, self.key_events)
-            self.screen.fill(COLORS["BLACK"])
-            self.screen.blit(self.display_frame.image, self.display_frame.rect)
-            pygame.display.update()
-        pygame.quit()
-
-    def test(self):
-        info = self.opt_menu.get_info()
-        print("Selected index: %d, Option Text: \"%s\", Has changed: %d" % (info[0], self.file_types[info[0]], info[1]))
-
-    @staticmethod
-    def render_basic_button(size: t.Tuple[int, int], padding: int, text: str, font: pygame.font.Font,
-                            fg: t.Tuple[int, int, int], bg: t.Tuple[int, int, int]) -> pygame.Surface:
-        surf = pygame.Surface(size)
-        surf.fill(bg)
-        text_surf = resize_surf(font.render(text, False, fg), (size[0] - 2 * padding, size[1] - 2 * padding))
-        surf.blit(text_surf, (size[0] / 2 - text_surf.get_width() / 2, size[1] / 2 - text_surf.get_height() / 2))
-        return surf
-"""

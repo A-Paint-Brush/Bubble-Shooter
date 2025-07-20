@@ -1,44 +1,44 @@
-import typing as t
+import typing as tp
 import pygame
 
 
 class CursorIcons:
     def __init__(self):
-        self.cursor_data: t.Tuple[t.Union[int, t.Tuple[t.Tuple[int, int], t.Tuple[str, ...]]],
-                                  ...] = (pygame.SYSTEM_CURSOR_ARROW, pygame.SYSTEM_CURSOR_IBEAM,
-                                          ((0, 0),
-                                           ("XX                      ",
-                                            "X.X                     ",
-                                            "X..X                    ",
-                                            "X...X                   ",
-                                            "X....X                  ",
-                                            "X.....X                 ",
-                                            "X......X                ",
-                                            "X.......X               ",
-                                            "X........X              ",
-                                            "X.........X             ",
-                                            "X......XXXXX            ",
-                                            "X...X..X                ",
-                                            "X..XX..X                ",
-                                            "X.X  X..X               ",
-                                            "XX   X..X               ",
-                                            "X     X..X              ",
-                                            "      X..X              ",
-                                            "       X..X             ",
-                                            "   X X X..XX X XX       ",
-                                            "    X X XXX X X         ",
-                                            "   X           XX       ",
-                                            "    X         X         ",
-                                            "   X           XX       ",
-                                            "    X         X         ",
-                                            "   X           XX       ",
-                                            "    X X X X X X         ",
-                                            "   X X X X X X XX       ",
-                                            "                        ",
-                                            "                        ",
-                                            "                        ",
-                                            "                        ",
-                                            "                        ")))
+        self.cursor_data: tp.Tuple[tp.Union[int, tp.Tuple[tp.Tuple[int, int], tp.Tuple[str, ...]]],
+                                   ...] = (pygame.SYSTEM_CURSOR_ARROW, pygame.SYSTEM_CURSOR_IBEAM,
+                                           ((0, 0),
+                                            ("XX                      ",
+                                             "X.X                     ",
+                                             "X..X                    ",
+                                             "X...X                   ",
+                                             "X....X                  ",
+                                             "X.....X                 ",
+                                             "X......X                ",
+                                             "X.......X               ",
+                                             "X........X              ",
+                                             "X.........X             ",
+                                             "X......XXXXX            ",
+                                             "X...X..X                ",
+                                             "X..XX..X                ",
+                                             "X.X  X..X               ",
+                                             "XX   X..X               ",
+                                             "X     X..X              ",
+                                             "      X..X              ",
+                                             "       X..X             ",
+                                             "   X X X..XX X XX       ",
+                                             "    X X XXX X X         ",
+                                             "   X           XX       ",
+                                             "    X         X         ",
+                                             "   X           XX       ",
+                                             "    X         X         ",
+                                             "   X           XX       ",
+                                             "    X X X X X X         ",
+                                             "   X X X X X X XX       ",
+                                             "                        ",
+                                             "                        ",
+                                             "                        ",
+                                             "                        ",
+                                             "                        ")))
         self.cursor_objects = []
 
     def get_number_of_cursors(self) -> int:
@@ -103,7 +103,7 @@ class Cursor(pygame.sprite.Sprite):
             self.y = new_y
             self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
-    def get_pos(self) -> t.Tuple[int, int]:
+    def get_pos(self) -> tp.Tuple[int, int]:
         return self.x, self.y
 
     def set_button_state(self, button_number: int, state: bool) -> None:
@@ -126,7 +126,7 @@ class Cursor(pygame.sprite.Sprite):
             self.scroll_amount[0] += x_amount
             self.scroll_amount[1] += y_amount
 
-    def get_scroll(self, direction: t.Literal["vertical", "horizontal"]) -> int:
+    def get_scroll(self, direction: tp.Literal["vertical", "horizontal"]) -> int:
         return self.scroll_amount[1] if direction == "vertical" else self.scroll_amount[0]
 
     def mouse_enter(self) -> None:

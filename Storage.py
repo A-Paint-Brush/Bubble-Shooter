@@ -1,7 +1,6 @@
 """Classes for storing complex structures in memory and doing threaded disk IO."""
 from Util import find_abs_path, get_platform_data_path
-from collections import namedtuple
-import typing as t
+import typing as tp
 import threading
 import queue
 import enum
@@ -17,22 +16,22 @@ class AchievementData:
         self.body_text = ()
         self.explanation_text = ()
         # Stores the IDs of all acquired achievements.
-        self.achievements: t.Optional[t.List[bool]] = None
-        self.db_binding: t.Optional[t.Callable[[int], None]] = None
+        self.achievements: tp.Optional[tp.List[bool]] = None
+        self.db_binding: tp.Optional[tp.Callable[[int], None]] = None
 
-    def load_achievements(self, loaded_data: t.List[bool], binding: t.Callable[[int], None]) -> None:
+    def load_achievements(self, loaded_data: tp.List[bool], binding: tp.Callable[[int], None]) -> None:
         self.achievements = loaded_data
         self.db_binding = binding
 
-    def get_new_achievement(self, achievement_id: int) -> t.Tuple[str, str]:
+    def get_new_achievement(self, achievement_id: int) -> tp.Tuple[str, str]:
         self.achievements[achievement_id] = True
         self.db_binding(achievement_id)
         return self.titles[achievement_id], self.body_text[achievement_id]
 
-    def get_state_data(self) -> t.List[bool]:
+    def get_state_data(self) -> tp.List[bool]:
         return self.achievements
 
-    def get_achievement_string(self, achievement_id: int) -> t.Tuple[str, str]:
+    def get_achievement_string(self, achievement_id: int) -> tp.Tuple[str, str]:
         return self.titles[achievement_id], self.explanation_text[achievement_id]
 
     def has_achievement(self, achievement_id: int) -> bool:
@@ -84,12 +83,12 @@ class ScoreDB:
         self.encoding = "utf-8"
         self.fields = ("player-name", "score")
         self.data_queue = queue.Queue()
-        self.io_thread: t.Optional[threading.Thread] = None
+        self.io_thread: tp.Optional[threading.Thread] = None
 
     def is_busy(self) -> bool:
         return self.io_thread.is_alive()
 
-    def get_data(self) -> t.Tuple[enum.Enum, t.Optional[t.List[t.Dict[str, str]]]]:
+    def get_data(self) -> tp.Tuple[enum.Enum, tp.Optional[tp.List[tp.Dict[str, str]]]]:
         if not self.io_thread.is_alive():
             return self.data_queue.get()
 
@@ -170,7 +169,7 @@ class AchievementDB:
         self.writer.start()
 
     @staticmethod
-    def encode_booleans(original_booleans: t.List[bool]) -> bytes:
+    def encode_booleans(original_booleans: tp.List[bool]) -> bytes:
         if not original_booleans:  # Return empty bytes object if list is empty
             return b""
         dec_num = int("".join(str(int(i)) for i in original_booleans), base=2)
@@ -179,7 +178,7 @@ class AchievementDB:
         return dec_num.to_bytes(byte_length, "big")
 
     @staticmethod
-    def decode_booleans(encoded_bytes: bytes, bool_len: int) -> t.List[bool]:
+    def decode_booleans(encoded_bytes: bytes, bool_len: int) -> tp.List[bool]:
         return [bool(int(binary_digit))
                 for binary_digit in bin(int(encoded_bytes.hex() or "0", base=16))[2:bool_len + 2].zfill(bool_len)]
 
@@ -199,7 +198,7 @@ class AchievementDB:
         else:
             return True
 
-    def read_data(self) -> t.Optional[t.List[bool]]:
+    def read_data(self) -> tp.Optional[tp.List[bool]]:
         if not self.ensure_exists():
             return None
         try:
@@ -210,7 +209,7 @@ class AchievementDB:
         else:
             return self.decode_booleans(data, self.achievement_length)
 
-    def write_data(self, updated_data: t.List[bool]) -> None:
+    def write_data(self, updated_data: tp.List[bool]) -> None:
         try:
             with open(self.file_path, "wb") as file:
                 file.write(self.encode_booleans(updated_data))

@@ -1,17 +1,17 @@
 from Util import *
 import Time
 import pygame
-if t.TYPE_CHECKING:
+if tp.TYPE_CHECKING:
     import Mouse
 
 
 class ToastNotifier(pygame.sprite.Sprite):
-    def __init__(self, resolution: t.Tuple[int, int], icon: pygame.Surface, y_pos: int, message_title: str,
+    def __init__(self, resolution: tp.Tuple[int, int], icon: pygame.Surface, y_pos: int, message_title: str,
                  message_text: str, toast_id: int):
         super().__init__()
         self.id = toast_id
-        self.title_font = pygame.font.Font(find_abs_path("./Fonts/Arial/bold.ttf"), 25)
-        self.body_font = pygame.font.Font(find_abs_path("./Fonts/Arial/normal.ttf"), 23)
+        self.title_font = pygame.font.SysFont("arial", 25)
+        self.body_font = pygame.font.SysFont("arial", 23)
         self.icon_img = icon
         self.image_padding = 15
         self.resolution = resolution
@@ -64,13 +64,13 @@ class ToastNotifier(pygame.sprite.Sprite):
         self.acceleration = 550
         # endregion
 
-    def render_text(self, font: pygame.font.Font, text: t.List[str], line_height: int, calc_y: int = 0) -> None:
+    def render_text(self, font: pygame.font.Font, text: tp.List[str], line_height: int, calc_y: int = 0) -> None:
         for line_number, line_text in enumerate(text):
             text_surf = font.render(line_text, True, COLORS["BLACK"])
             self.image.blit(text_surf, (self.corner_radius + self.icon_img.get_size()[0] + self.image_padding,
                                         self.corner_radius + calc_y + line_height * line_number))
 
-    def render_surface(self, color: t.Tuple[int, int, int]) -> None:
+    def render_surface(self, color: tp.Tuple[int, int, int]) -> None:
         self.image.fill((0, 0, 0, 0))
         draw_rounded_rect(self.image, (0, 0), (self.width, self.height), self.corner_radius, color)
         self.image.blit(self.icon_img, (self.corner_radius, self.corner_radius))
@@ -83,11 +83,11 @@ class ToastNotifier(pygame.sprite.Sprite):
     def calc_damp(self, delta_time: float) -> None:
         self.remaining_distance *= pow(self.damping, delta_time)
 
-    def update_size(self, new_res: t.Tuple[int, int]) -> None:
+    def update_size(self, new_res: tp.Tuple[int, int]) -> None:
         self.dest_x = new_res[0] - self.width - self.border_padding
         self.resolution = new_res
 
-    def update(self, new_res: t.Optional[t.Tuple[int, int]] = None) -> bool:
+    def update(self, new_res: tp.Optional[tp.Tuple[int, int]] = None) -> bool:
         """Only returns true when this toast notification has completed its exiting animation."""
         if new_res is not None:
             self.update_size(new_res)
@@ -162,7 +162,7 @@ class ToastNotifier(pygame.sprite.Sprite):
         self.remaining_distance = self.resolution[0] - self.dest_x
         self.delta_time.reset_timer()
 
-    def get_size(self) -> t.Tuple[int, int]:
+    def get_size(self) -> tp.Tuple[int, int]:
         return self.width, self.height
 
     def get_id(self) -> int:
@@ -170,7 +170,7 @@ class ToastNotifier(pygame.sprite.Sprite):
 
 
 class ToastGroup(pygame.sprite.Group):
-    def __init__(self, resolution: t.Tuple[int, int], toast_icons: t.Dict[str, pygame.Surface], z_index: int):
+    def __init__(self, resolution: tp.Tuple[int, int], toast_icons: tp.Dict[str, pygame.Surface], z_index: int):
         super().__init__()
         self.z_index = z_index
         self.resolution = resolution
@@ -191,7 +191,7 @@ class ToastGroup(pygame.sprite.Group):
         self.add(new_toast)
         self.assign_id += 1
 
-    def update(self, new_res: t.Optional[t.Tuple[int, int]] = None) -> None:
+    def update(self, new_res: tp.Optional[tp.Tuple[int, int]] = None) -> None:
         if new_res is not None:
             self.resolution = new_res
         for index, toast in enumerate(self.toasts):

@@ -1,6 +1,6 @@
-#! /usr/bin/env python
+#!/usr/bin/env python3
 import Env
-import typing as t
+import typing as tp
 from Util import configure_dpi
 from Dialogs import file_dialog
 from Game import MainLoop, GAME_MIN_RES
@@ -12,8 +12,8 @@ configure_dpi()
 
 
 def video_setup(title: str,
-                window_res: t.Tuple[int, int]) -> t.Tuple[pygame.Surface, t.Tuple[int, int], t.Tuple[int, int],
-                                                          t.Dict[str, str]]:
+                window_res: tp.Tuple[int, int]) -> tp.Tuple[pygame.Surface, tp.Tuple[int, int], tp.Tuple[int, int],
+                                                            tp.Dict[str, str]]:
     modules = {"display": "The application could not start because the video system failed to initialize.",
                "font": "The application could not start because the font rendering engine failed to initialize.",
                "mixer": "The sound system failed to initialize! This may be due to a problematic driver or hardware "
@@ -36,14 +36,8 @@ def video_setup(title: str,
     return screen, hardware_res, window_res, errors
 
 
-def main(window_res: t.Tuple[int, int] = GAME_MIN_RES) -> None:
+def main(window_res: tp.Tuple[int, int] = GAME_MIN_RES) -> None:
     MainLoop(*video_setup("Bubble Shooter", window_res))
-
-
-"""def askopenfilename(title: str, allowed_extensions: str, window_res: t.Tuple[int, int] = DIALOG_MIN_RES) -> None:
-    exts = [ext.lstrip("*") for ext in allowed_extensions.split()]
-    video_data = video_setup(title, window_res)
-    AskOpenFilename(video_data[0], video_data[1], video_data[2], exts)"""
 
 
 if __name__ == "__main__":
